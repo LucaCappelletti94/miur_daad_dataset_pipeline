@@ -1,4 +1,3 @@
-import silence_tensorflow
 from .build import build
 from .load import tasks_generator, balanced_holdouts_generator
 from .clear import clear

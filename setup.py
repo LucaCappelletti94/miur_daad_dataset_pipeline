@@ -83,22 +83,12 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     tests_require=test_deps,
     install_requires=[
-        'notipy_me',
-        'dict_hash',
-        'gaussian_process',
+        'miur_daad_balancing',
         'fasta_one_hot_encoder',
         'pandas',
-        'sklearn',
-        'scikit-optimize',
         'auto_tqdm',
-        'plot_keras_history',
-        'extra_keras_utils',
-        'extra_keras_metrics',
-        'keras_tqdm',
-        'keras',
         'holdouts_generator',
-        'ucsc_genomes_downloader',
-        'silence_tensorflow'
+        'ucsc_genomes_downloader'
     ],
     extras_require=extras,
 )

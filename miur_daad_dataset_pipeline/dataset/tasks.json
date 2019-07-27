@@ -10,7 +10,7 @@
         "balancing": {
             "umbalanced": true,
             "balanced": false,
-            "full_balanced": true
+            "full_balanced": false
         }
     },
     {
@@ -22,9 +22,9 @@
             "I-P"
         ],
         "balancing": {
-            "umbalanced": true,
+            "umbalanced": false,
             "balanced": false,
-            "full_balanced": true
+            "full_balanced": false
         }
     },
     {
@@ -36,9 +36,9 @@
             "I-E"
         ],
         "balancing": {
-            "umbalanced": true,
+            "umbalanced": false,
             "balanced": false,
-            "full_balanced": true
+            "full_balanced": false
         }
     },
     {
@@ -50,9 +50,9 @@
             "I-P"
         ],
         "balancing": {
-            "umbalanced": true,
+            "umbalanced": false,
             "balanced": false,
-            "full_balanced": true
+            "full_balanced": false
         }
     },
     {
@@ -69,9 +69,9 @@
             "UK"
         ],
         "balancing": {
-            "umbalanced": true,
+            "umbalanced": false,
             "balanced": false,
-            "full_balanced": true
+            "full_balanced": false
         }
     }
 ]
