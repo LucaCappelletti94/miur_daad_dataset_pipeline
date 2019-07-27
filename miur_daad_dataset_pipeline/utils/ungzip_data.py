@@ -12,3 +12,5 @@ def ungzip_data(target: str):
     ]
     with Pool(cpu_count()) as p:
         list(tqdm(p.imap(ungzip, paths), desc="Expanding data", total=len(paths)))
+        p.close()
+        p.join()

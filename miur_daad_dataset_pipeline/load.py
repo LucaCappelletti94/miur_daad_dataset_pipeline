@@ -52,10 +52,9 @@ def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance
 
 
 def tasks_generator(target: str=None) -> Generator:
-    if target is None:
-        target = "{script_directory}/dataset".format(
-            script_directory=os.path.dirname(os.path.abspath(__file__))
-        )
+    target = "{script_directory}/dataset".format(
+        script_directory=os.path.dirname(os.path.abspath(__file__))
+    ) if target is None else target
     tasks = load_tasks(target)
     return (
         (target, cell_line, task, balance_mode)

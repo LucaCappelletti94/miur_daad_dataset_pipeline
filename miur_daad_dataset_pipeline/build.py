@@ -3,10 +3,9 @@ from ucsc_genomes_downloader import download_genome
 import os
 
 def build(target:str=None):
-    if target is None:
-        target = "{script_directory}/dataset".format(
-            script_directory=os.path.dirname(os.path.abspath(__file__))
-        )
+    target = "{script_directory}/dataset".format(
+        script_directory=os.path.dirname(os.path.abspath(__file__))
+    ) if target is None else target
     download_genome("hg19", path=target)
     ungzip_data(target)
     cell_lines = get_cell_lines(target)

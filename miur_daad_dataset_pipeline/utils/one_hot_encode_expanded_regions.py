@@ -21,9 +21,6 @@ def one_hot_encode_expanded_regions(target: str, cell_lines:List[str]):
         )
         if os.path.exists(path):
             continue
-        if os.path.exists("{path}.gz".format(path=path)):
-            ungzip("{path}.gz".format(path=path))
-            continue
         expand_cell_line_path = "{target}/expanded_regions/{cell_line}.fa".format(
             cell_line=cell_line,
             target=target
