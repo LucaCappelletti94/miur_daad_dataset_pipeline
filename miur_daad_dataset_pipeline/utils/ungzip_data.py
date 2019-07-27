@@ -1,14 +1,14 @@
 from .ungzip import ungzip
 import os
-from typing import Dict
+from typing import List
 from auto_tqdm import tqdm
+from glob import glob
+from multiprocessing import cpu_count, Pool
 
-def ungzip_data(target: str, settings:Dict):
-    for cell_line in tqdm(settings["cell_lines"], desc="Expanding epigenomic data"):
-        path =  "{target}/epigenomic_data/{cell_line}.csv".format(
-            target=target,
-            cell_line=cell_line
-        )
-        if os.path.exists(path):
-            continue
-        ungzip("{path}.gz".format(path=path))
+def ungzip_data(target: str):
+    paths = list(glob('{target}/**/*.gz'.format(target=target), recursive=True))
+    paths = [
+            path for path in paths if not os.path.exists(path.split(".gz")[0])
+    ]
+    with Pool(cpu_count()) as p:
+        list(tqdm(p.imap(ungzip, paths), desc="Expanding data", total=len(paths)))

@@ -1,2 +1,2 @@
-"""Current version of package arrp"""
-__version__ = "2.4.1"
+"""Current version of package miur_daad_dataset_pipeline"""
+__version__ = "1.0.0"

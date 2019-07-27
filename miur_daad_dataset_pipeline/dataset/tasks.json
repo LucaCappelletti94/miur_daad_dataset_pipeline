@@ -1,0 +1,77 @@
+[
+    {
+        "name": "Active enhancers vs active promoters",
+        "positive": [
+            "A-E"
+        ],
+        "negative": [
+            "A-P"
+        ],
+        "balancing": {
+            "umbalanced": true,
+            "balanced": false,
+            "full_balanced": true
+        }
+    },
+    {
+        "name": "Active promoters vs inactive promoters",
+        "positive": [
+            "A-P"
+        ],
+        "negative": [
+            "I-P"
+        ],
+        "balancing": {
+            "umbalanced": true,
+            "balanced": false,
+            "full_balanced": true
+        }
+    },
+    {
+        "name": "Active enhancers vs inactive enhancers",
+        "positive": [
+            "A-E"
+        ],
+        "negative": [
+            "I-E"
+        ],
+        "balancing": {
+            "umbalanced": true,
+            "balanced": false,
+            "full_balanced": true
+        }
+    },
+    {
+        "name": "Inactive enhancers vs inactive promoters",
+        "positive": [
+            "I-E"
+        ],
+        "negative": [
+            "I-P"
+        ],
+        "balancing": {
+            "umbalanced": true,
+            "balanced": false,
+            "full_balanced": true
+        }
+    },
+    {
+        "name": "Active enhancers and promoters vs anything else",
+        "positive": [
+            "A-E",
+            "A-P"
+        ],
+        "negative": [
+            "A-X",
+            "I-E",
+            "I-P",
+            "I-X",
+            "UK"
+        ],
+        "balancing": {
+            "umbalanced": true,
+            "balanced": false,
+            "full_balanced": true
+        }
+    }
+]

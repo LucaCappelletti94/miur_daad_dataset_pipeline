@@ -1,0 +1,2 @@
+include miur_daad_dataset_pipeline/**/*.gz
+include miur_daad_dataset_pipeline/**/*.json

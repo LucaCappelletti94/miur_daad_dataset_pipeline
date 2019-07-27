@@ -1,19 +1,20 @@
 import subprocess
 import os
 from auto_tqdm import tqdm
-from typing import Dict
+from typing import List
 
-def expand_regions(target: str, genome: str, settings:Dict):
+
+def expand_regions(target: str, genome: str, cell_lines: List[str]):
     """Expand the genomic regions using data withing given target and genome."""
     os.makedirs(
         "{target}/expanded_regions".format(target=target), exist_ok=True)
-    for region in tqdm(settings["cell_lines"], desc="Expanding cell lines sequences"):
-        goal = "{target}/expanded_regions/{region}.fa".format(
-            region=region,
+    for cell_line in tqdm(cell_lines, desc="Expanding cell lines sequences"):
+        goal = "{target}/expanded_regions/{cell_line}.fa".format(
+            cell_line=cell_line,
             target=target
         )
-        region_path = "{target}/regions/{region}.bed".format(
-            region=region,
+        region_path = "{target}/regions/{cell_line}.bed".format(
+            cell_line=cell_line,
             target=target
         )
         if not os.path.exists(goal):

@@ -12,4 +12,4 @@ def get_raw_nucleotides_sequences_path(target:str, cell_line:str):
     return _build_csv_path(target, "one_hot_encoded_expanded_regions", cell_line)
 
 def get_raw_classes_path(target:str, cell_line:str):
-    return _build_csv_path(target, "one_hot_encoded_classes", cell_line)
+    return _build_csv_path(target, "classes", cell_line)

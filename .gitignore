@@ -2,3 +2,7 @@
 \.vscode
 **/__pycache__/*
 */__pycache__/*
+\.holdouts
+htmlcov
+test_dataset
+\.coverage*
