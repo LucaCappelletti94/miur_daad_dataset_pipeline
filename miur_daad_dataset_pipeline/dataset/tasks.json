@@ -7,6 +7,8 @@
         "negative": [
             "A-P"
         ],
+        "epigenomic_data":false,
+        "nucleotides_sequences":true,
         "balancing": {
             "umbalanced": true,
             "balanced": false,
@@ -21,6 +23,8 @@
         "negative": [
             "I-P"
         ],
+        "epigenomic_data":false,
+        "nucleotides_sequences":true,
         "balancing": {
             "umbalanced": false,
             "balanced": false,
@@ -35,6 +39,8 @@
         "negative": [
             "I-E"
         ],
+        "epigenomic_data":false,
+        "nucleotides_sequences":true,
         "balancing": {
             "umbalanced": false,
             "balanced": false,
@@ -49,6 +55,8 @@
         "negative": [
             "I-P"
         ],
+        "epigenomic_data":false,
+        "nucleotides_sequences":true,
         "balancing": {
             "umbalanced": false,
             "balanced": false,
@@ -68,6 +76,8 @@
             "I-X",
             "UK"
         ],
+        "epigenomic_data":false,
+        "nucleotides_sequences":true,
         "balancing": {
             "umbalanced": false,
             "balanced": false,

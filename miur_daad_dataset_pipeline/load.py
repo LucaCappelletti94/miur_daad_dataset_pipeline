@@ -25,20 +25,28 @@ def balanced_generator(generator:Generator, balance: Callable, positive:List[str
 
 
 def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance_mode: str):
-    epigenomic_data = load_raw_epigenomic_data(target, cell_line).values
-    nucleotides_sequences = load_raw_nucleotides_sequences(target, cell_line)
     classes = load_raw_classes(target, cell_line).values
     used_classes = task["positive"] + task["negative"]
     mask = np.array([
         c in used_classes for c in classes
     ])
-    epigenomic_data = epigenomic_data[mask]
-    nucleotides_sequences = nucleotides_sequences[mask]
+
+    data = []
+
+    if task["epigenomic_data"]:
+        epigenomic_data = load_raw_epigenomic_data(target, cell_line).values
+        epigenomic_data = epigenomic_data[mask]
+        data.append(epigenomic_data)
+
+    if task["nucleotides_sequences"]:
+        nucleotides_sequences = load_raw_nucleotides_sequences(target, cell_line)
+        nucleotides_sequences = nucleotides_sequences[mask]
+        data.append(nucleotides_sequences)
+    
     classes = classes[mask]
 
     generator = cached_holdouts_generator(
-        epigenomic_data,
-        nucleotides_sequences,
+        *data,
         classes,
         holdouts=random_holdouts(**load_holdouts(target)),
         skip=skip,
