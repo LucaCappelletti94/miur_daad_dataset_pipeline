@@ -11,20 +11,6 @@ from multiprocessing import cpu_count, Pool
 import gzip
 import shutil
 
-def compress(path:str):
-    with open(path, 'rb') as f_in:
-        with gzip.open("{path}.gz".format(path=path), 'wb') as f_out:
-            f_out.write(f_in.read())
-    os.remove(path)
-
-def compress_data(target: str):
-    paths = list(glob('{target}/**/*.csv'.format(target=target), recursive=True))
-    paths += list(glob('{target}/**/*.bed'.format(target=target), recursive=True))
-    with Pool(cpu_count()) as p:
-        list(tqdm(p.imap(compress, paths), desc="Compress data", total=len(paths)))
-        p.close()
-        p.join()
-
 def reduce(percentage:float, cell_line:str, target:str):
     labels_path = "{target}/classes/{cell_line}.csv".format(
         target=target,
@@ -49,15 +35,12 @@ def reduce(percentage:float, cell_line:str, target:str):
     epigenomic_data[mask].to_csv(epigenomic_data_path)
     regions[mask].to_csv(regions_path, sep="\t", index=None, header=None)
 
-def test_setup():
-    dataset = "miur_daad_dataset_pipeline/dataset/"
-    test_dataset = "test_dataset"
-    percentage = 0.001
-
+def build_test(test_dataset:str, percentage:float = 0.001):
+    dataset = "{script_directory}/dataset".format(
+        script_directory=os.path.dirname(os.path.abspath(__file__))
+    )
     copy_tree(dataset, test_dataset)
     ungzip_data(test_dataset)
 
-    for cell_line in tqdm(get_cell_lines(test_dataset)):
+    for cell_line in tqdm(get_cell_lines(test_dataset), desc="Reducing dataset to given percentage"):
         reduce(percentage, cell_line, test_dataset)
-
-    compress_data(test_dataset)

@@ -14,10 +14,10 @@ def balanced_generator(generator:Generator, balance: Callable, positive:List[str
         for (training, testing), key, sub_generator in generator(*args, **kwargs):
             if training is not None:
                 training, testing = balance(training, testing)
-                training = *training[:2], np.array([
+                training = *training[:-1], np.array([
                     c in positive for c in training[-1]
                 ])
-                testing = *testing[:2], np.array([
+                testing = *testing[:-1], np.array([
                     c in positive for c in testing[-1]
                 ])
             yield (training, testing), key, balanced_generator(sub_generator, balance, positive)

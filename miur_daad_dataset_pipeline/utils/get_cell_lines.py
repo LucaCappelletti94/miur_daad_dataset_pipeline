@@ -1,10 +1,9 @@
 from typing import List
-import os
+from json import load
 
 def get_cell_lines(target:str)->List[str]:
-    """Return list of available cell_lines in given target."""
-    return [
-        f.split(".bed.gz")[0] for f in os.listdir(
-            "{target}/regions".format(target=target)
-        ) if f.endswith(".bed.gz")
-    ]
+    """Return list of enabled cell_lines in given target."""
+    with open("{target}/cell_lines.json".format(target=target), "r") as f:
+        return [
+            k for k, v in load(f).items() if v
+        ]

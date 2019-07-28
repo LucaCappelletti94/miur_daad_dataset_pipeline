@@ -10,7 +10,7 @@
         "epigenomic_data":false,
         "nucleotides_sequences":true,
         "balancing": {
-            "umbalanced": true,
+            "umbalanced": false,
             "balanced": false,
             "full_balanced": false
         }
@@ -79,9 +79,9 @@
         "epigenomic_data":false,
         "nucleotides_sequences":true,
         "balancing": {
-            "umbalanced": false,
+            "umbalanced": true,
             "balanced": false,
-            "full_balanced": false
+            "full_balanced": true
         }
     }
 ]
