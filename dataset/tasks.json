@@ -76,7 +76,7 @@
             "I-X",
             "UK"
         ],
-        "epigenomic_data":true,
+        "epigenomic_data":false,
         "nucleotides_sequences":true,
         "balancing": {
             "umbalanced": true,
