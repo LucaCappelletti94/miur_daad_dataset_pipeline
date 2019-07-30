@@ -35,11 +35,8 @@ def reduce(percentage:float, cell_line:str, target:str):
     epigenomic_data[mask].to_csv(epigenomic_data_path)
     regions[mask].to_csv(regions_path, sep="\t", index=None, header=None)
 
-def build_test(test_dataset:str, percentage:float = 0.001):
-    dataset = "{script_directory}/dataset".format(
-        script_directory=os.path.dirname(os.path.abspath(__file__))
-    )
-    copy_tree(dataset, test_dataset)
+def build_test(source_dataset:str, test_dataset:str, percentage:float = 0.001):
+    copy_tree(source_dataset, test_dataset)
     ungzip_data(test_dataset)
 
     for cell_line in tqdm(get_cell_lines(test_dataset), desc="Reducing dataset to given percentage"):
