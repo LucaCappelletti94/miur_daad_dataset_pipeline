@@ -51,7 +51,7 @@ def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance
         holdouts=random_holdouts(**holdouts),
         skip=skip,
         cache_dir=".holdouts/{target}/{cell_line}/{name}".format(
-            target=target,
+            target=target.split("/")[-1],
             cell_line=cell_line,
             name=task["name"].replace(" ", "_")
         )
