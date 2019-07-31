@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Dict, Callable, Generator, List
-from .utils import load_holdouts, get_cell_lines, load_tasks, load_raw_nucleotides_sequences, load_raw_classes, load_raw_epigenomic_data
+from .utils import load_cell_lines, load_tasks, load_raw_nucleotides_sequences, load_raw_classes, load_raw_epigenomic_data
 from holdouts_generator import random_holdouts, cached_holdouts_generator, skip
 from miur_daad_balancing import get_callback
 import numpy as np
@@ -24,7 +24,7 @@ def balanced_generator(generator:Generator, balance: Callable, positive:List[str
     return wrapper
 
 
-def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance_mode: str):
+def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance_mode: str, holdouts:Dict):
     classes = load_raw_classes(target, cell_line).values
     used_classes = task["positive"] + task["negative"]
     mask = np.array([
@@ -48,7 +48,7 @@ def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance
     generator = cached_holdouts_generator(
         *data,
         classes,
-        holdouts=random_holdouts(**load_holdouts(target)),
+        holdouts=random_holdouts(**holdouts),
         skip=skip,
         cache_dir=".holdouts/{target}/{cell_line}/{name}".format(
             target=target,
@@ -63,7 +63,7 @@ def tasks_generator(target: str) -> Generator:
     tasks = load_tasks(target)
     return (
         (target, cell_line, task, balance_mode)
-        for cell_line in get_cell_lines(target)
+        for cell_line in load_cell_lines(target)
         for task in tasks
         for balance_mode, mode_enabled in task["balancing"].items()
         if mode_enabled

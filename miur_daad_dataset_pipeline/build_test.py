@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from distutils.dir_util import copy_tree
-from miur_daad_dataset_pipeline.utils import ungzip_data, get_cell_lines
+from miur_daad_dataset_pipeline.utils import ungzip_data, load_cell_lines
 from auto_tqdm import tqdm
 import os
 from typing import List
@@ -39,5 +39,5 @@ def build_test(source_dataset:str, test_dataset:str, percentage:float = 0.001):
     copy_tree(source_dataset, test_dataset)
     ungzip_data(test_dataset)
 
-    for cell_line in tqdm(get_cell_lines(test_dataset), desc="Reducing dataset to given percentage"):
+    for cell_line in tqdm(load_cell_lines(test_dataset), desc="Reducing dataset to given percentage"):
         reduce(percentage, cell_line, test_dataset)
