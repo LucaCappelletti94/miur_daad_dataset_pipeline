@@ -1,6 +1,5 @@
 import shutil
 import os
-from holdouts_generator import clear_cache
 from auto_tqdm import tqdm
 from glob import glob
 from multiprocessing import cpu_count, Pool
@@ -24,5 +23,3 @@ def clear(target: str):
         list(tqdm(p.imap(os.remove, paths), desc="Compress data", total=len(paths)))
         p.close()
         p.join()
-
-    clear_cache()
