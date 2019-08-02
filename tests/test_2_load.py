@@ -2,6 +2,7 @@ from miur_daad_dataset_pipeline import tasks_generator, balanced_holdouts_genera
 from miur_daad_dataset_pipeline.utils import load_holdouts
 from miur_daad_dataset_pipeline.utils import load_gaussian_process_holdouts
 from auto_tqdm import tqdm
+from holdouts_generator import clear_cache
 
 def test_load():
     target = "test_dataset"
@@ -9,6 +10,6 @@ def test_load():
         for _, _, sub in balanced_holdouts_generator(*task, load_gaussian_process_holdouts(target))():
             for _ in sub():
                 pass
-        for _, _, sub in balanced_holdouts_generator(*task, load_holdouts(target))():
-            for _ in sub():
-                pass
+        for _ in balanced_holdouts_generator(*task, load_holdouts(target))():
+            pass
+    clear_cache()

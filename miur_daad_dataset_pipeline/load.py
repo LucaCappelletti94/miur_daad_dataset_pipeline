@@ -1,8 +1,11 @@
 import pandas as pd
-from typing import Dict, Callable, Generator, List
+from typing import Dict, Callable, Generator, List, Tuple
 from .utils import load_cell_lines, load_tasks, load_raw_nucleotides_sequences, load_raw_classes, load_raw_epigenomic_data
 from holdouts_generator import random_holdouts, cached_holdouts_generator, skip
 from miur_daad_balancing import get_callback
+from multiprocessing import cpu_count, Pool
+from notipy_me import Notipy
+from auto_tqdm import tqdm
 import numpy as np
 import os
 
@@ -57,6 +60,25 @@ def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance
         )
     )
     return balanced_generator(generator, get_callback(balance_mode), task["positive"])
+
+def _multiprocessing_balanced_holdouts_generator(job:Tuple):
+    generator = balanced_holdouts_generator(*job)
+    for _, _, sub_generator in generator():
+        if sub_generator is not None:
+            for _ in sub_generator():
+                pass
+
+def task_builder(target:str, holdouts:Dict):
+    with Notipy():
+        tasks = [
+            (*task, holdouts) for task in tasks_generator(target)
+        ]
+        with Pool(cpu_count()) as p:
+            list(tqdm(
+                p.imap(_multiprocessing_balanced_holdouts_generator, tasks),
+                total = len(tasks),
+                desc="Building tasks"
+            ))
 
 
 def tasks_generator(target: str) -> Generator:
