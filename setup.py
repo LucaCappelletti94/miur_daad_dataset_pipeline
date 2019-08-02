@@ -88,7 +88,8 @@ setup(
         'pandas',
         'auto_tqdm',
         'holdouts_generator',
-        'ucsc_genomes_downloader'
+        'ucsc_genomes_downloader',
+        'notipy_me'
     ],
     extras_require=extras,
 )
