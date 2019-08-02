@@ -61,25 +61,19 @@ def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance
     )
     return balanced_generator(generator, get_callback(balance_mode), task["positive"])
 
-def _multiprocessing_balanced_holdouts_generator(job:Tuple):
-    generator = balanced_holdouts_generator(*job)
-    for _, _, sub_generator in generator():
-        if sub_generator is not None:
-            for _ in sub_generator():
-                pass
-
 def task_builder(target:str, holdouts:Dict):
-    with Notipy():
-        tasks = [
-            (*task, holdouts) for task in tasks_generator(target)
-        ]
-        with Pool(cpu_count()) as p:
-            list(tqdm(
-                p.imap(_multiprocessing_balanced_holdouts_generator, tasks),
-                total = len(tasks),
-                desc="Building tasks"
-            ))
-
+    with Notipy() as report:
+        for i, task in tqdm(enumerate(list(tasks_generator(target))), desc="Build tasks"):
+            generator = balanced_holdouts_generator(*task, holdouts)
+            for _, _, sub_generator in generator():
+                if sub_generator is not None:
+                    for _ in sub_generator():
+                        pass
+            report.add_report(pd.DataFrame({
+                "task":task[2]["name"],
+                "cell_line":task[2],
+                "balancing":task[3]
+            }, index=[i]))
 
 def tasks_generator(target: str) -> Generator:
     tasks = load_tasks(target)
