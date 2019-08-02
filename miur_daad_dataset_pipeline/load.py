@@ -72,7 +72,7 @@ def task_builder(target:str, holdouts:Dict):
                         pass
             report.add_report(pd.DataFrame({
                 "task":task[2]["name"],
-                "cell_line":task[2],
+                "cell_line":task[1],
                 "balancing":task[3]
             }, index=[i]))
 
