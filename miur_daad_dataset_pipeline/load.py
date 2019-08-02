@@ -63,7 +63,8 @@ def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance
 
 def task_builder(target:str, holdouts:Dict):
     with Notipy() as report:
-        for i, task in tqdm(enumerate(list(tasks_generator(target))), desc="Build tasks"):
+        tasks = list(tasks_generator(target))
+        for i, task in tqdm(enumerate(tasks), total=len(tasks), desc="Build tasks"):
             generator = balanced_holdouts_generator(*task, holdouts)
             for _, _, sub_generator in generator():
                 if sub_generator is not None:
