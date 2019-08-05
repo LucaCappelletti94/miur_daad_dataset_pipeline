@@ -89,7 +89,12 @@ setup(
         'auto_tqdm',
         'holdouts_generator',
         'ucsc_genomes_downloader',
-        'notipy_me'
+        'notipy_me',
+        'silence_tensorflow',
+        'extra_keras_metrics',
+        'extra_keras_utils',
+        'gaussian_process',
+        'keras_tqdm'
     ],
     extras_require=extras,
 )
