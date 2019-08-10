@@ -27,7 +27,7 @@ def balanced_generator(generator:Generator, balance: Callable, positive:List[str
     return wrapper
 
 
-def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance_mode: str, holdouts:Dict):
+def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance_mode: str, holdouts:Dict, verbose:bool=True):
     classes = load_raw_classes(target, cell_line).values
     used_classes = task["positive"] + task["negative"]
     mask = np.array([
@@ -57,7 +57,8 @@ def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance
             target=target.split("/")[-1],
             cell_line=cell_line,
             name=task["name"].replace(" ", "_")
-        )
+        ),
+        verbose=verbose
     )
     return balanced_generator(generator, get_callback(balance_mode), task["positive"])
 
