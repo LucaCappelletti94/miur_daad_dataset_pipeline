@@ -10,9 +10,10 @@ from MulticoreTSNE import MulticoreTSNE as TSNE
 from .utils import load_raw_epigenomic_data, load_cell_lines, load_raw_classes
 from multiprocessing import cpu_count
 from humanize import naturaldate
+import os
 import time
 
-def heatmap(df:pd.DataFrame):
+def heatmap(df:pd.DataFrame, cell_line:str):
     plt.rcParams['figure.figsize'] = [80, 80]
     plt.axis('scaled')
     sns.heatmap(
@@ -22,9 +23,19 @@ def heatmap(df:pd.DataFrame):
         yticklabels=df.columns,
         cbar=False
     )
+    title= f"Correlation map for cell line {cell_line}"
+    path = "visualize/correlation"
+    os.makedirs(path, exist_ok=True)
+    plt.title(title)
+    plt.savefig(f"{path}/{title}.png")
 
-def scatter(df:pd.DataFrame):
-    scatter_matrix(df, alpha = 0.2, figsize = (200, 200), diagonal = 'kde')
+def scatter(df:pd.DataFrame, cell_line:str):
+    pd.plotting.scatter_matrix(df, alpha = 0.2, figsize = (200, 200), diagonal = 'kde')
+    title= f"Scatter plot for cell line {cell_line}"
+    path = "visualize/scatter"
+    os.makedirs(path)
+    plt.title(title)
+    plt.savefig(f"{path}/{title}.png")
 
 classes_colors = {
     "I-X":"red",
@@ -40,7 +51,7 @@ def clustering(df:pd.DataFrame, classes:pd.DataFrame, cell_line:str, method, met
     plt.rcParams['figure.figsize'] = [8, 8]
     one, two = "First component", 'Second component'
     reduction = pd.DataFrame(data=method.fit_transform(df), columns=[one, two])
-    mask = (reduction.abs() < reduction.std()).any(axis=1)
+    mask = (reduction.abs() < 2*reduction.std()).any(axis=1)
     reduction, classes = reduction[mask], classes[mask]
     reduction = (reduction-reduction.min())/(reduction.max()-reduction.min())
     clustered = pd.concat([reduction, classes], axis=1)
@@ -52,9 +63,10 @@ def clustering(df:pd.DataFrame, classes:pd.DataFrame, cell_line:str, method, met
         else:
             clustered[mask].plot(kind="scatter", x=one,y=two, color=classes_colors[cls], label=cls, ax=ax, alpha=0.6)
     title = f"{method_name} reduction for {cell_line} epigenomic data."
+    path = "visualize/clustering"
+    os.makedirs(path, exist_ok=True)
     plt.title(title)
-    plt.savefig(title)
-    plt.show()
+    plt.savefig(f"{path}/{title}.png")
     plt.close()
 
 def pca(df:pd.DataFrame, classes:pd.DataFrame, cell_line:str):
@@ -66,18 +78,17 @@ def tsne(df:pd.DataFrame, classes:pd.DataFrame, cell_line:str):
     clustering(df, classes, cell_line, tsne, "TSNE")
 
 
-def visualize(target:str):
+def visualize(target:str, cell_line:str):
     with Notipy() as r:
-        for cell_line in tqdm(load_cell_lines(target)):
-            start = time.time()
-            df = load_raw_epigenomic_data(target, cell_line)
-            classes = load_raw_classes(target, cell_line)
-            classes.columns = ["labels"]
-            #pca(df, classes, cell_line)
-            tsne(df, classes, cell_line)
-            #heatmap(df)
-            #scatter(df)
-            r.add_report(pd.DataFrame({
-                "cell line":cell_line,
-                "time":naturaldate(time.time() - start)
-            }))
+        start = time.time()
+        df = load_raw_epigenomic_data(target, cell_line)
+        classes = load_raw_classes(target, cell_line)
+        classes.columns = ["labels"]
+        pca(df, classes, cell_line)
+        tsne(df, classes, cell_line)
+        heatmap(df, cell_line)
+        scatter(df, cell_line)
+        r.add_report(pd.DataFrame({
+            "cell line":cell_line,
+            "time":naturaldate(time.time() - start)
+        }))
