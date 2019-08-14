@@ -7,12 +7,12 @@
         "negative": [
             "A-P"
         ],
-        "epigenomic_data":false,
-        "nucleotides_sequences":true,
+        "epigenomic_data":true,
+        "nucleotides_sequences":false,
         "balancing": {
-            "umbalanced": false,
-            "balanced": false,
-            "full_balanced": false
+            "umbalanced": true,
+            "balanced": true,
+            "full_balanced": true
         }
     },
     {
@@ -23,12 +23,12 @@
         "negative": [
             "I-P"
         ],
-        "epigenomic_data":false,
-        "nucleotides_sequences":true,
+        "epigenomic_data":true,
+        "nucleotides_sequences":false,
         "balancing": {
-            "umbalanced": false,
-            "balanced": false,
-            "full_balanced": false
+            "umbalanced": true,
+            "balanced": true,
+            "full_balanced": true
         }
     },
     {
@@ -39,12 +39,12 @@
         "negative": [
             "I-E"
         ],
-        "epigenomic_data":false,
-        "nucleotides_sequences":true,
+        "epigenomic_data":true,
+        "nucleotides_sequences":false,
         "balancing": {
-            "umbalanced": false,
-            "balanced": false,
-            "full_balanced": false
+            "umbalanced": true,
+            "balanced": true,
+            "full_balanced": true
         }
     },
     {
@@ -55,12 +55,12 @@
         "negative": [
             "I-P"
         ],
-        "epigenomic_data":false,
-        "nucleotides_sequences":true,
+        "epigenomic_data":true,
+        "nucleotides_sequences":false,
         "balancing": {
-            "umbalanced": false,
-            "balanced": false,
-            "full_balanced": false
+            "umbalanced": true,
+            "balanced": true,
+            "full_balanced": true
         }
     },
     {
@@ -76,11 +76,11 @@
             "I-X",
             "UK"
         ],
-        "epigenomic_data":false,
-        "nucleotides_sequences":true,
+        "epigenomic_data":true,
+        "nucleotides_sequences":false,
         "balancing": {
             "umbalanced": true,
-            "balanced": false,
+            "balanced": true,
             "full_balanced": true
         }
     }

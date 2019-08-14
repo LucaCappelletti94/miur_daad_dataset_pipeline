@@ -94,7 +94,10 @@ setup(
         'extra_keras_metrics',
         'extra_keras_utils',
         'gaussian_process',
-        'keras_tqdm'
+        'keras_tqdm',
+        "matplotlib",
+        "seaborn",
+        "cmake"
     ],
     extras_require=extras,
 )
