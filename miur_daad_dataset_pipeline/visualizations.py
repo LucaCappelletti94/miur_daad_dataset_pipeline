@@ -88,6 +88,7 @@ def labelize(classes: np.ndarray, task: Dict) -> pd.DataFrame:
 
 def visualize(target: str):
     with Notipy() as r:
+        os.makedirs("visualize", exist_ok=True)
         tasks = list(tasks_generator(target))
         for target, cell_line, task, balance_mode in tqdm(tasks):
             generator = balanced_holdouts_generator(target, cell_line, task, balance_mode, {
@@ -108,7 +109,7 @@ def visualize(target: str):
                 balance_mode=balance_mode
             )
             plt.tight_layout()
-            plt.savefig(f"{title}.png")
+            plt.savefig(f"visualize/{title}.png")
             plt.close()
             r.add_report(pd.DataFrame({
                 "cell line": cell_line,
