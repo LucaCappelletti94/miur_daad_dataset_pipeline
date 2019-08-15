@@ -91,8 +91,8 @@ def labelize(classes: np.ndarray, task: Dict) -> pd.DataFrame:
 def visualize(target: str):
     with Notipy() as r:
         os.makedirs("visualize", exist_ok=True)
-        tasks = list(tasks_generator(target))
-        for target, cell_line, task, balance_mode in tqdm(tasks):
+        tasks = list(enumerate(tasks_generator(target)))
+        for i, (target, cell_line, task, balance_mode) in tqdm(tasks):
             generator = balanced_holdouts_generator(target, cell_line, task, balance_mode, {
                 "quantities": [1],
                 "test_sizes": [0.3]
@@ -117,4 +117,4 @@ def visualize(target: str):
                 "cell line": cell_line,
                 "task": task["name"],
                 "balance_mode": balance_mode
-            }))
+            }, index=[i]))
