@@ -44,29 +44,31 @@ import matplotlib.pyplot as plt
 #     plt.savefig(f"{path}/{title}.png")
 
 
-classes_colors = {
-    "I-X": "red",
-    "A-P": "blue",
-    "I-P": "green",
-    "A-X": "yellow",
-    "UK": "black",
-    "I-E": "cyan",
-    "A-E": "magenta"
-}
+# classes_colors = {
+#     "I-X": "red",
+#     "A-P": "blue",
+#     "I-P": "green",
+#     "A-X": "yellow",
+#     "UK": "black",
+#     "I-E": "cyan",
+#     "A-E": "magenta",
+#     ""
+# }
 
 
 def clustering(df: pd.DataFrame, classes: pd.DataFrame, cell_line: str, method, method_name: str, axis, set_name: str):
     plt.rcParams['figure.figsize'] = [8, 8]
     one, two = "First component", 'Second component'
+    colors = ["orange", "cyan"]
     reduction = pd.DataFrame(data=method.fit_transform(df), columns=[one, two])
     mask = (reduction.abs() < 2*reduction.std()).any(axis=1)
     reduction, classes = reduction[mask], classes[mask]
     reduction = (reduction-reduction.min())/(reduction.max()-reduction.min())
     clustered = pd.concat([reduction, classes], axis=1)
-    for cls in set(clustered.labels.values):
+    for i, cls in enumerate(set(clustered.labels.values)):
         mask = clustered.labels == cls
         clustered[mask].plot(kind="scatter", x=one, y=two,
-                             color=classes_colors[cls], label=cls, ax=axis, alpha=0.4)
+                             color=colors[i], label=cls, ax=axis, alpha=0.4)
     axis.set_title(f"{method_name} reduction of {set_name}")
 
 def pca(df: pd.DataFrame, classes: pd.DataFrame, cell_line: str, axis, set_name: str):
