@@ -7,7 +7,7 @@ import os
 from humanize import naturaldate
 from multiprocessing import cpu_count
 from .load import tasks_generator, balanced_holdouts_generator
-#from MulticoreTSNE import MulticoreTSNE as TSNE
+from MulticoreTSNE import MulticoreTSNE as TSNE
 from notipy_me import Notipy
 from sklearn.decomposition import PCA
 import seaborn as sns
