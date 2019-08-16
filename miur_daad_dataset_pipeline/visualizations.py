@@ -84,7 +84,12 @@ def visualize(target: str):
     with Notipy() as r:
         tasks = list(enumerate(tasks_generator(target)))
         for i, (target, cell_line, task, balance_mode) in tqdm(tasks):
-            if os.path.exists(f"{i}.tmp"):
+            title = "{cell_line}-{balance_mode}-{task}".format(
+                task=task["name"],
+                cell_line=cell_line,
+                balance_mode=balance_mode.replace("umbalanced", "unbalanced")
+            )
+            if os.path.exists(f"{i}.tmp") or os.path.exists(f"{path}/{title}.png".replace(" ", "_")):
                 continue
             with open(f"{i}.tmp", "w") as f:
                 f.write("")
@@ -102,12 +107,7 @@ def visualize(target: str):
             mask = mask.astype(bool)
             _, axes = plt.subplots(1, 4, figsize=(8*4, 8))
             pca(X, y, mask, axes[0], axes[1])
-            tsne(X, y, mask, axes[2], axes[3])
-            title = "{cell_line}-{balance_mode}-{task}".format(
-                task=task["name"],
-                cell_line=cell_line,
-                balance_mode=balance_mode.replace("umbalanced", "unbalanced")
-            )
+            tsne(X, y, mask, axes[2], axes[3]) 
             plt.tight_layout()
             plt.savefig(f"{path}/{title}.png".replace(" ", "_"))
             plt.close()
