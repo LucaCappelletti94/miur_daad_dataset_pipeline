@@ -19,35 +19,36 @@ from typing import Dict
 
 
 def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str, std):
-    colors = ["orange", "blue"]
-    mask = (df.abs() < 2*std).any(axis=1)
+    colors = ["#ff7f0e", "#1f77b4"]
+    mask = (df < 6*std).any(axis=1)
     df, classes = df[mask], classes[mask]
     clustered = pd.concat([df, classes], axis=1)
     for i, label in enumerate(set(clustered.labels.values)):
         clustered[clustered.labels == label].plot(
             kind="scatter",
+            edgecolors='none',
             x=clustered.columns[0],
             y=clustered.columns[1],
             color=colors[i],
             label=label,
             ax=axis,
-            alpha=0.4
+            alpha=0.5
         )
+
     axis.set_title(title)
 
 
 def clusterize(method, train_x: pd.DataFrame, train_y: pd.DataFrame, test_x: pd.DataFrame, test_y: pd.DataFrame, train_axes, test_axes, title: str):
     one, two = "First component", 'Second component'
-    method.fit(train_x)
     scaler = MinMaxScaler()
-    train_x = pd.DataFrame(data=method.transform(train_x), columns=[one, two])
-    test_x = pd.DataFrame(data=method.transform(test_x), columns=[one, two])
+    train_x = pd.DataFrame(data=method.fit_transform(train_x), columns=[one, two])
+    test_x = pd.DataFrame(data=method.fit_transform(test_x), columns=[one, two])
     scaler.fit(train_x)
     train_x = scaler.transform(train_x)
     test_x = scaler.transform(test_x)
-    std = train_x.std()
     train_x = pd.DataFrame(data=train_x, columns=[one, two])
     test_x = pd.DataFrame(data=test_x, columns=[one, two])
+    std = train_x.std()
     plot_clusters(train_x, train_y, train_axes,
                   title.format(set_name="Training set"), std)
     plot_clusters(test_x, test_y, test_axes,
@@ -56,7 +57,7 @@ def clusterize(method, train_x: pd.DataFrame, train_y: pd.DataFrame, test_x: pd.
 
 def pca(train_x: pd.DataFrame, train_y: pd.DataFrame, test_x: pd.DataFrame, test_y: pd.DataFrame, train_axes, test_axes):
     clusterize(
-        PCA(n_components=2),
+        PCA(n_components=2, random_state=42),
         train_x,
         train_y,
         test_x,
@@ -69,7 +70,7 @@ def pca(train_x: pd.DataFrame, train_y: pd.DataFrame, test_x: pd.DataFrame, test
 
 def tsne(train_x: pd.DataFrame, train_y: pd.DataFrame, test_x: pd.DataFrame, test_y: pd.DataFrame, train_axes, test_axes):
     clusterize(
-        TSNE(n_jobs=cpu_count(), verbose=2),
+        TSNE(n_jobs=cpu_count(), verbose=0, random_state=42),
         train_x,
         train_y,
         test_x,
@@ -90,11 +91,14 @@ def labelize(classes: np.ndarray, task: Dict) -> pd.DataFrame:
 def visualize(target: str):
     with Notipy() as r:
         tasks = list(enumerate(tasks_generator(target)))
+        imprinting = None
         for i, (target, cell_line, task, balance_mode) in tqdm(tasks):
             path = f"visualize/clustering/{cell_line}"
-            if os.path.exists(path):
+            if not os.path.exists(path):
+                imprinting = cell_line
+                os.makedirs(path, exist_ok=True)
+            elif cell_line != imprinting:
                 continue
-            os.makedirs(path, exist_ok=True)
             generator = balanced_holdouts_generator(target, cell_line, task, balance_mode, {
                 "quantities": [1],
                 "test_sizes": [0.3]
