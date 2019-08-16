@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH --account=ELIX4_valentin
+#SBATCH --partition=gll_usr_prod
+#SBATCH --cpus-per-task=36
+#SBATCH --mem=8GB
+#SBATCH --time 1:00:00
+#SBATCH --job-name=CNN-CPU-VISUALIZATION
+BASEDIR="/gpfs/work/ELIX4_valentin/cnn/miur_daad_dataset_pipeline"
+VENVPYTHONDIR="/gpfs/work/ELIX4_valentin/cnn/cnn_cpu_venv"
+cd $BASEDIR
+module load python/3.6.4
+source $VENVPYTHONDIR/bin/activate
+python3 -c 'from miur_daad_dataset_pipeline import visualize; visualize("dataset")'
+deactivate
