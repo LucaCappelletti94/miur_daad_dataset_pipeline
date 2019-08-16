@@ -46,6 +46,8 @@ def clusterize(method, train_x: pd.DataFrame, train_y: pd.DataFrame, test_x: pd.
     train_x = scaler.transform(train_x)
     test_x = scaler.transform(test_x)
     std = train_x.std()
+    train_x = pd.DataFrame(data=train_x, columns=[one, two])
+    test_x = pd.DataFrame(data=test_x, columns=[one, two])
     plot_clusters(train_x, train_y, train_axes,
                   title.format(set_name="Training set"), std)
     plot_clusters(test_x, test_y, test_axes,
