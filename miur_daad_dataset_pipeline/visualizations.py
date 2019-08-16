@@ -83,14 +83,13 @@ def labelize(classes: np.ndarray, task: Dict) -> pd.DataFrame:
 def visualize(target: str):
     with Notipy() as r:
         tasks = list(enumerate(tasks_generator(target)))
-        imprinting = None
         for i, (target, cell_line, task, balance_mode) in tqdm(tasks):
-            path = f"visualize/clustering/{cell_line}"
-            if not os.path.exists(path):
-                imprinting = cell_line
-                os.makedirs(path, exist_ok=True)
-            elif cell_line != imprinting:
+            if os.path.exists(f"{i}.tmp"):
                 continue
+            with open(f"{i}.tmp", "w") as f:
+                f.write("")
+            path = f"visualize/clustering/{cell_line}"
+            os.makedirs(path, exist_ok=True)
             generator = balanced_holdouts_generator(target, cell_line, task, balance_mode, {
                 "quantities": [1],
                 "test_sizes": [0.3]
@@ -112,6 +111,7 @@ def visualize(target: str):
             plt.tight_layout()
             plt.savefig(f"{path}/{title}.png".replace(" ", "_"))
             plt.close()
+            os.remove(f"{i}.tmp")
             r.add_report(pd.DataFrame({
                 "cell line": cell_line,
                 "task": task["name"],
