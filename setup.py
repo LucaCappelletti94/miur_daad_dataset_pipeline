@@ -97,7 +97,8 @@ setup(
         'keras_tqdm',
         "matplotlib",
         "seaborn",
-        "cmake"
+        "cmake",
+        "MulticoreTSNE"
     ],
     extras_require=extras,
 )
