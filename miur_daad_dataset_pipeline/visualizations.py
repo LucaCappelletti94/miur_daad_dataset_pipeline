@@ -84,6 +84,7 @@ def visualize(target: str):
     with Notipy() as r:
         tasks = list(enumerate(tasks_generator(target)))
         for i, (target, cell_line, task, balance_mode) in tqdm(tasks):
+            path = f"visualize/clustering/{cell_line}"
             title = "{cell_line}-{balance_mode}-{task}".format(
                 task=task["name"],
                 cell_line=cell_line,
@@ -93,7 +94,6 @@ def visualize(target: str):
                 continue
             with open(f"{i}.tmp", "w") as f:
                 f.write("")
-            path = f"visualize/clustering/{cell_line}"
             os.makedirs(path, exist_ok=True)
             generator = balanced_holdouts_generator(target, cell_line, task, balance_mode, {
                 "quantities": [1],
