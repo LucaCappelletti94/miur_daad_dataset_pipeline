@@ -40,8 +40,8 @@ def clusterize(method, train_x: pd.DataFrame, train_y: pd.DataFrame, test_x: pd.
     one, two = "First component", 'Second component'
     method.fit(train_x)
     scaler = MinMaxScaler()
-    train = pd.DataFrame(data=method.transform(train_x), columns=[one, two])
-    test = pd.DataFrame(data=method.transform(test_x), columns=[one, two])
+    train_x = pd.DataFrame(data=method.transform(train_x), columns=[one, two])
+    test_x = pd.DataFrame(data=method.transform(test_x), columns=[one, two])
     scaler.fit(train_x)
     train_x = scaler.transform(train_x)
     test_x = scaler.transform(test_x)
