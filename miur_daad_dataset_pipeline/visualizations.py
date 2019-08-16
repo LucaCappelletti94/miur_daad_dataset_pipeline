@@ -38,43 +38,35 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str, std
     axis.set_title(title)
 
 
-def clusterize(method, train_x: pd.DataFrame, train_y: pd.DataFrame, test_x: pd.DataFrame, test_y: pd.DataFrame, train_axes, test_axes, title: str):
+def clusterize(method, X: pd.DataFrame, y: pd.DataFrame, mask:np.array, train_axes, test_axes, title: str):
     one, two = "First component", 'Second component'
     scaler = MinMaxScaler()
-    train_x = pd.DataFrame(data=method.fit_transform(train_x), columns=[one, two])
-    test_x = pd.DataFrame(data=method.fit_transform(test_x), columns=[one, two])
-    scaler.fit(train_x)
-    train_x = scaler.transform(train_x)
-    test_x = scaler.transform(test_x)
-    train_x = pd.DataFrame(data=train_x, columns=[one, two])
-    test_x = pd.DataFrame(data=test_x, columns=[one, two])
-    std = train_x.std()
-    plot_clusters(train_x, train_y, train_axes,
+    X = pd.DataFrame(data=scaler.fit_transform(method.fit_transform(X)), columns=[one, two])
+    std = X.std()
+    plot_clusters(X[mask], y[mask], train_axes,
                   title.format(set_name="Training set"), std)
-    plot_clusters(test_x, test_y, test_axes,
+    plot_clusters(X[~mask], y[~mask], test_axes,
                   title.format(set_name="Testing set"), std)
 
 
-def pca(train_x: pd.DataFrame, train_y: pd.DataFrame, test_x: pd.DataFrame, test_y: pd.DataFrame, train_axes, test_axes):
+def pca(X: pd.DataFrame, y: pd.DataFrame, mask:np.array, train_axes, test_axes):
     clusterize(
         PCA(n_components=2, random_state=42),
-        train_x,
-        train_y,
-        test_x,
-        test_y,
+        X,
+        y,
+        mask,
         train_axes,
         test_axes,
         "{set_name} PCA decomposition"
     )
 
 
-def tsne(train_x: pd.DataFrame, train_y: pd.DataFrame, test_x: pd.DataFrame, test_y: pd.DataFrame, train_axes, test_axes):
+def tsne(X: pd.DataFrame, y: pd.DataFrame, mask:np.array, train_axes, test_axes):
     clusterize(
         TSNE(n_jobs=cpu_count(), verbose=0, random_state=42),
-        train_x,
-        train_y,
-        test_x,
-        test_y,
+        X,
+        y,
+        mask,
         train_axes,
         test_axes,
         "{set_name} TSNE decomposition"
@@ -104,15 +96,18 @@ def visualize(target: str):
                 "test_sizes": [0.3]
             }, verbose=False)
             ((train_x, train_y), (test_x, test_y)), _, _ = next(generator())
-            train_y = labelize(train_y, task)
-            test_y = labelize(test_y, task)
+            X = np.vstack([train_x, test_x])
+            y = labelize(np.hstack([train_y, test_y]), task)
+            mask = np.zeros(y.size)
+            mask[:train_y.size] = 1
+            mask = mask.astype(bool)
             _, axes = plt.subplots(1, 4, figsize=(8*4, 8))
-            pca(train_x, train_y, test_x, test_y, axes[0], axes[1])
-            tsne(train_x, train_y, test_x, test_y, axes[2], axes[3])
-            title = "{cell_line}-{task}-{balance_mode}".format(
+            pca(X, y, mask, axes[0], axes[1])
+            tsne(X, y, mask, axes[2], axes[3])
+            title = "{cell_line}-{balance_mode}-{task}".format(
                 task=task["name"],
                 cell_line=cell_line,
-                balance_mode=balance_mode
+                balance_mode=balance_mode.replace("umbalanced", "unbalanced")
             )
             plt.tight_layout()
             plt.savefig(f"{path}/{title}.png".replace(" ", "_"))
