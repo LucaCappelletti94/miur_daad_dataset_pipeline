@@ -64,8 +64,11 @@ def tsne(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes
 
 
 def mca(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes):
+    size = 50000
     clusterize(
-        MCA(X).fs_r(N=2),
+        np.vstack([
+            MCA(X.loc[i:i+size-1,:]).fs_r(N=2) for i in range(0, len(X), size)
+        ]),
         y,
         mask,
         train_axes,
