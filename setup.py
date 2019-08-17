@@ -98,6 +98,7 @@ setup(
         "matplotlib",
         "seaborn",
         "cmake",
+        "mca",
         "MulticoreTSNE"
     ],
     extras_require=extras,

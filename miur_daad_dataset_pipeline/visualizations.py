@@ -1,21 +1,22 @@
+from typing import Dict
+from mca import MCA
+import numpy as np
+import time
+import os
+from humanize import naturaldate
+from multiprocessing import cpu_count
+from .load import tasks_generator, balanced_holdouts_generator
+from MulticoreTSNE import MulticoreTSNE as TSNE
+from notipy_me import Notipy
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import MinMaxScaler
+from matplotlib import pylab
+from matplotlib import pyplot as plt
+from auto_tqdm import tqdm
+import pandas as pd
+import matplotlib.pyplot as plt
 import matplotlib
 matplotlib.use('Agg')
-
-import matplotlib.pyplot as plt
-import pandas as pd
-from auto_tqdm import tqdm
-from matplotlib import pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.decomposition import PCA
-from notipy_me import Notipy
-from MulticoreTSNE import MulticoreTSNE as TSNE
-from .load import tasks_generator, balanced_holdouts_generator
-from multiprocessing import cpu_count
-from humanize import naturaldate
-import os
-import time
-import numpy as np
-from typing import Dict
 
 
 def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str, std):
@@ -34,42 +35,42 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str, std
             ax=axis,
             alpha=0.5
         )
-
+    axis.set_xlim(-0.05, 1.05)
+    axis.set_ylim(-0.05, 1.05)
     axis.set_title(title)
 
 
-def clusterize(method, X: pd.DataFrame, y: pd.DataFrame, mask:np.array, train_axes, test_axes, title: str):
+def clusterize(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes, title: str):
     one, two = "First component", 'Second component'
     scaler = MinMaxScaler()
-    X = pd.DataFrame(data=scaler.fit_transform(method.fit_transform(X)), columns=[one, two])
+    X = pd.DataFrame(data=scaler.fit_transform(X), columns=[one, two])
     std = X.std()
     plot_clusters(X[mask], y[mask], train_axes,
-                  title.format(set_name="Training set"), std)
+                  title.format(set_name="Train set"), std)
     plot_clusters(X[~mask], y[~mask], test_axes,
-                  title.format(set_name="Testing set"), std)
+                  title.format(set_name="Test set"), std)
 
 
-def pca(X: pd.DataFrame, y: pd.DataFrame, mask:np.array, train_axes, test_axes):
+def tsne(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes):
     clusterize(
-        PCA(n_components=2, random_state=42),
-        X,
+        TSNE(n_jobs=cpu_count(), verbose=0, random_state=42).fit_transform(
+            PCA(n_components=50, random_state=42).fit_transform(X)),
         y,
         mask,
         train_axes,
         test_axes,
-        "{set_name} PCA decomposition"
+        "{set_name} - TSNE for epigenomic data"
     )
 
 
-def tsne(X: pd.DataFrame, y: pd.DataFrame, mask:np.array, train_axes, test_axes):
+def mca(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes):
     clusterize(
-        TSNE(n_jobs=cpu_count(), verbose=0, random_state=42),
-        X,
+        MCA(X).fs_r(N=2),
         y,
         mask,
         train_axes,
         test_axes,
-        "{set_name} TSNE decomposition"
+        "{set_name} - MCA for sequence data"
     )
 
 
@@ -80,11 +81,19 @@ def labelize(classes: np.ndarray, task: Dict) -> pd.DataFrame:
     return labelized
 
 
+def reindex_nucleotides(X: np.ndarray, nucleotides=("a", "c", "g", "n", "t")):
+    return pd.DataFrame(
+        X.reshape(-1, X.shape[1]*X.shape[2]),
+        columns=pd.MultiIndex.from_arrays(
+            [nucleotides*X.shape[1], tuple(range(X.shape[1]))*X.shape[2]], names=['nucleotides', 'indices'])
+    )
+
+
 def visualize(target: str):
     with Notipy() as r:
         tasks = list(enumerate(tasks_generator(target)))
         for i, (target, cell_line, task, balance_mode) in tqdm(tasks):
-            path = f"visualize/clustering/{cell_line}"
+            path = f"visualize/decompositions/{cell_line}"
             title = "{cell_line}-{balance_mode}-{task}".format(
                 task=task["name"],
                 cell_line=cell_line,
@@ -99,15 +108,18 @@ def visualize(target: str):
                 "quantities": [1],
                 "test_sizes": [0.3]
             }, verbose=False)
-            ((train_x, train_y), (test_x, test_y)), _, _ = next(generator())
-            X = np.vstack([train_x, test_x])
-            y = labelize(np.hstack([train_y, test_y]), task)
-            mask = np.zeros(y.size)
-            mask[:train_y.size] = 1
+            ((train_epigenomic, train_sequence, train_classes), (test_epigenomic,
+                                                                 test_sequence, test_classes)), _, _ = next(generator())
+            epigenomic = np.vstack([train_epigenomic, test_epigenomic])
+            sequence = reindex_nucleotides(
+                np.vstack([train_sequence, test_sequence]))
+            classes = labelize(np.hstack([train_classes, test_classes]), task)
+            mask = np.zeros(classes.size)
+            mask[:train_classes.size] = 1
             mask = mask.astype(bool)
-            _, axes = plt.subplots(1, 4, figsize=(8*4, 8))
-            pca(X, y, mask, axes[0], axes[1])
-            tsne(X, y, mask, axes[2], axes[3]) 
+            _, axes = plt.subplots(1, 4, figsize=(5*4, 5))
+            mca(sequence, classes, mask, axes[0], axes[1])
+            tsne(epigenomic, classes, mask, axes[2], axes[3])
             plt.tight_layout()
             plt.savefig(f"{path}/{title}.png".replace(" ", "_"))
             plt.close()
