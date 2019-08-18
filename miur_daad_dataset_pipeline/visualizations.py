@@ -16,6 +16,7 @@ from auto_tqdm import tqdm
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
+from scipy import stats
 matplotlib.use('Agg')
 
 
@@ -42,7 +43,7 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
 def clusterize(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes, title: str):
     one, two = "First component", 'Second component'
     scaler = MinMaxScaler()
-    std_mask = np.array(np.square(X-X.mean()).sum(axis=1) < 8*np.square(X.std()).sum())
+    std_mask= (np.abs(stats.zscore(X)) < 3).all(axis=1)
     X, y, mask = X[std_mask], y[std_mask], mask[std_mask]
     X = pd.DataFrame(data=scaler.fit_transform(X), columns=[one, two])
     plot_clusters(X[mask], y[mask], train_axes, title.format(set_name="Train set"))
