@@ -7,12 +7,12 @@
         "negative": [
             "A-P"
         ],
-        "epigenomic_data":true,
-        "nucleotides_sequences":true,
+        "epigenomic_data":false,
+        "nucleotides_sequences":false,
         "balancing": {
-            "umbalanced": true,
-            "balanced": true,
-            "full_balanced": true
+            "umbalanced": false,
+            "balanced": false,
+            "full_balanced": false
         }
     },
     {
@@ -23,12 +23,12 @@
         "negative": [
             "I-P"
         ],
-        "epigenomic_data":true,
-        "nucleotides_sequences":true,
+        "epigenomic_data":false,
+        "nucleotides_sequences":false,
         "balancing": {
-            "umbalanced": true,
-            "balanced": true,
-            "full_balanced": true
+            "umbalanced": false,
+            "balanced": false,
+            "full_balanced": false
         }
     },
     {
@@ -39,12 +39,12 @@
         "negative": [
             "I-E"
         ],
-        "epigenomic_data":true,
-        "nucleotides_sequences":true,
+        "epigenomic_data":false,
+        "nucleotides_sequences":false,
         "balancing": {
-            "umbalanced": true,
-            "balanced": true,
-            "full_balanced": true
+            "umbalanced": false,
+            "balanced": false,
+            "full_balanced": false
         }
     },
     {
@@ -55,12 +55,12 @@
         "negative": [
             "I-P"
         ],
-        "epigenomic_data":true,
-        "nucleotides_sequences":true,
+        "epigenomic_data":false,
+        "nucleotides_sequences":false,
         "balancing": {
-            "umbalanced": true,
-            "balanced": true,
-            "full_balanced": true
+            "umbalanced": false,
+            "balanced": false,
+            "full_balanced": false
         }
     },
     {
@@ -80,8 +80,8 @@
         "nucleotides_sequences":true,
         "balancing": {
             "umbalanced": true,
-            "balanced": true,
-            "full_balanced": true
+            "balanced": false,
+            "full_balanced": false
         }
     }
 ]
