@@ -21,18 +21,17 @@ matplotlib.use('Agg')
 
 def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str, std):
     colors = ["#ff7f0e", "#1f77b4"]
-    mask = (df < 8*std).any(axis=1)
-    df, classes = df[mask], classes[mask]
-    clustered = pd.concat([df, classes], axis=1)
-    for i, label in enumerate(set(clustered.labels.values)):
-        clustered[clustered.labels == label].plot(
+    for i, label in enumerate(set(classes.values.flatten())):
+        label_mask = classes.values.flatten() == label
+        df[label_mask].plot(
             kind="scatter",
             edgecolors='none',
-            x=clustered.columns[0],
-            y=clustered.columns[1],
+            x=df.columns[0],
+            y=df.columns[1],
             color=colors[i],
             label=label,
             ax=axis,
+            zorder=df.shape[0] - df[label_mask].shape[0], # To put on top the smaller cluster
             alpha=0.5
         )
     axis.set_xlim(-0.05, 1.05)
@@ -65,10 +64,11 @@ def tsne(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes
 
 def mca(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes):
     size = 100000
+    idx = np.random.permutation(X.index.values)[:size]
     clusterize(
-        MCA(X.loc[:size,:]).fs_r(N=2),
-        y.loc[:size,:],
-        mask,
+        MCA(X.iloc[idx]).fs_r(N=2),
+        y.iloc[idx],
+        mask[idx],
         train_axes,
         test_axes,
         "{set_name} - MCA for sequence data"
@@ -110,7 +110,7 @@ def visualize(target: str):
                 "test_sizes": [0.3]
             }, verbose=False)
             ((train_epigenomic, train_sequence, train_classes), (test_epigenomic,
-                                                                 test_sequence, test_classes)), _, _ = next(generator())
+                                                                    test_sequence, test_classes)), _, _ = next(generator())
             epigenomic = np.vstack([train_epigenomic, test_epigenomic])
             sequence = reindex_nucleotides(
                 np.vstack([train_sequence, test_sequence]))
@@ -118,7 +118,7 @@ def visualize(target: str):
             mask = np.zeros(classes.size)
             mask[:train_classes.size] = 1
             mask = mask.astype(bool)
-            _, axes = plt.subplots(1, 4, figsize=(7*4, 7))
+            _, axes = plt.subplots(1, 4, figsize=(6*4, 6))
             mca(sequence, classes, mask, axes[0], axes[1])
             tsne(epigenomic, classes, mask, axes[2], axes[3])
             plt.tight_layout()
