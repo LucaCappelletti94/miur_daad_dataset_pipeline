@@ -21,7 +21,7 @@ matplotlib.use('Agg')
 
 def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str, std):
     colors = ["#ff7f0e", "#1f77b4"]
-    mask = (df < 4*std).any(axis=1)
+    mask = (df < 8*std).any(axis=1)
     df, classes = df[mask], classes[mask]
     clustered = pd.concat([df, classes], axis=1)
     for i, label in enumerate(set(clustered.labels.values)):
@@ -64,12 +64,10 @@ def tsne(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes
 
 
 def mca(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes):
-    size = 50000
+    size = 100000
     clusterize(
-        np.vstack([
-            MCA(X.loc[i:i+size-1,:]).fs_r(N=2) for i in range(0, len(X), size)
-        ]),
-        y,
+        MCA(X.loc[:size,:]).fs_r(N=2),
+        y.loc[:size,:],
         mask,
         train_axes,
         test_axes,
