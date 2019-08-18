@@ -19,7 +19,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 
-def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str, std):
+def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
     colors = ["#ff7f0e", "#1f77b4"]
     for i, label in enumerate(set(classes.values.flatten())):
         label_mask = classes.values.flatten() == label
@@ -42,12 +42,11 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str, std
 def clusterize(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes, title: str):
     one, two = "First component", 'Second component'
     scaler = MinMaxScaler()
+    std_mask = np.array(np.square(X-X.mean()).sum(axis=1) < 8*np.square(X.std()).sum())
+    X, y, mask = X[std_mask], y[std_mask], mask[std_mask]
     X = pd.DataFrame(data=scaler.fit_transform(X), columns=[one, two])
-    std = X.std()
-    plot_clusters(X[mask], y[mask], train_axes,
-                  title.format(set_name="Train set"), std)
-    plot_clusters(X[~mask], y[~mask], test_axes,
-                  title.format(set_name="Test set"), std)
+    plot_clusters(X[mask], y[mask], train_axes, title.format(set_name="Train set"))
+    plot_clusters(X[~mask], y[~mask], test_axes, title.format(set_name="Test set"))
 
 
 def tsne(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes):
