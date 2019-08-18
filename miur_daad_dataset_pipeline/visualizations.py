@@ -32,7 +32,8 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             color=colors[i],
             label=label,
             ax=axis,
-            zorder=df.shape[0] - df[label_mask].shape[0], # To put on top the smaller cluster
+            # To put on top the smaller cluster
+            zorder=df.shape[0] - df[label_mask].shape[0],
             alpha=0.5
         )
     axis.set_xlim(-0.05, 1.05)
@@ -43,12 +44,15 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
 def clusterize(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes, title: str):
     one, two = "First component", 'Second component'
     scaler = MinMaxScaler()
-    #std_mask= (np.abs(stats.zscore(X)) < X.shape[1]).all(axis=1)
-    std_mask = np.array(np.abs(X-X.mean()) < 3*np.square(X.std()))
+    std_mask = (np.abs(stats.zscore(X)) < 3).all(axis=1)
+    X, y, mask = X[std_mask], y[std_mask], mask[std_mask]
+    std_mask = (np.abs(stats.zscore(X)) < 3).all(axis=1)
     X, y, mask = X[std_mask], y[std_mask], mask[std_mask]
     X = pd.DataFrame(data=scaler.fit_transform(X), columns=[one, two])
-    plot_clusters(X[mask], y[mask], train_axes, title.format(set_name="Train set"))
-    plot_clusters(X[~mask], y[~mask], test_axes, title.format(set_name="Test set"))
+    plot_clusters(X[mask], y[mask], train_axes,
+                  title.format(set_name="Train set"))
+    plot_clusters(X[~mask], y[~mask], test_axes,
+                  title.format(set_name="Test set"))
 
 
 def tsne(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes):
@@ -111,7 +115,7 @@ def visualize(target: str):
                 "test_sizes": [0.3]
             }, verbose=False)
             ((train_epigenomic, train_sequence, train_classes), (test_epigenomic,
-                                                                    test_sequence, test_classes)), _, _ = next(generator())
+                                                                 test_sequence, test_classes)), _, _ = next(generator())
             epigenomic = np.vstack([train_epigenomic, test_epigenomic])
             sequence = reindex_nucleotides(
                 np.vstack([train_sequence, test_sequence]))
