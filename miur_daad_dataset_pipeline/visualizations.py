@@ -21,7 +21,7 @@ matplotlib.use('Agg')
 
 def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str, std):
     colors = ["#ff7f0e", "#1f77b4"]
-    mask = (df < 6*std).any(axis=1)
+    mask = (df < 4*std).any(axis=1)
     df, classes = df[mask], classes[mask]
     clustered = pd.concat([df, classes], axis=1)
     for i, label in enumerate(set(clustered.labels.values)):
@@ -120,7 +120,7 @@ def visualize(target: str):
             mask = np.zeros(classes.size)
             mask[:train_classes.size] = 1
             mask = mask.astype(bool)
-            _, axes = plt.subplots(1, 4, figsize=(5*4, 5))
+            _, axes = plt.subplots(1, 4, figsize=(7*4, 7))
             mca(sequence, classes, mask, axes[0], axes[1])
             tsne(epigenomic, classes, mask, axes[2], axes[3])
             plt.tight_layout()
