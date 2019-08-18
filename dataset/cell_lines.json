@@ -1,6 +1,6 @@
 {
-    "GM12878":false,
-    "HelaS3":false,
-    "HepG2":false,
+    "GM12878":true,
+    "HelaS3":true,
+    "HepG2":true,
     "K562":true
 }

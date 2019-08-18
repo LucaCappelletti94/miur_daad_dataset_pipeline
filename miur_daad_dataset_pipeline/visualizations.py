@@ -125,7 +125,7 @@ def visualize(target: str):
             mask = mask.astype(bool)
             _, axes = plt.subplots(1, 4, figsize=(6*4, 6))
             mca(sequence, classes, mask, axes[0], axes[1])
-            #tsne(epigenomic, classes, mask, axes[2], axes[3])
+            tsne(epigenomic, classes, mask, axes[2], axes[3])
             plt.tight_layout()
             plt.savefig(f"{path}/{title}.png".replace(" ", "_"))
             plt.close()
