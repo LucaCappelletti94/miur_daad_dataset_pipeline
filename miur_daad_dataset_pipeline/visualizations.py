@@ -63,7 +63,7 @@ def tsne(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes
 
 
 def mca(X: pd.DataFrame, y: pd.DataFrame, mask: np.array, train_axes, test_axes):
-    size = 100000
+    size = 50000
     idx = np.random.permutation(X.index.values)[:size]
     clusterize(
         MCA(X.iloc[idx]).fs_r(N=2),
