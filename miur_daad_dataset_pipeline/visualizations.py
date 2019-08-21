@@ -161,7 +161,7 @@ def visualize_cell_lines_epigenomic(target: str, cell_line: str, path: str, clas
     clear_cache(path)
 
 def visualize_cell_lines_mixed(target: str, cell_line: str, path: str, classes: pd.DataFrame):
-    size = 1000
+    size = 50000
     build_cache(path)
     sequence = reindex_nucleotides(load_raw_nucleotides_sequences(target, cell_line))
     idx = np.random.permutation(sequence.index.values)
@@ -174,9 +174,9 @@ def visualize_cell_lines_mixed(target: str, cell_line: str, path: str, classes: 
             np.vstack([
                 MinMaxScaler().fit_transform(MCA(
                     sequence.iloc[i:i+size]
-                ).fs_r(N=50)) for i in range(0, len(sequence), size)
+                ).fs_r(N=20)) for i in range(0, len(sequence), size)
             ]),
-            PCA(n_components=50, random_state=42).fit_transform(epigenomic)
+            PCA(n_components=20, random_state=42).fit_transform(epigenomic)
         ])),
         classes.reindex(idx),
         [np.ones(classes.size).astype(bool)],
