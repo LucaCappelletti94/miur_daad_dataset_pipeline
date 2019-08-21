@@ -22,7 +22,18 @@ matplotlib.use('Agg')
 
 
 def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
-    colors = ["#ff7f0e", "#1f77b4"]
+    colors = [
+        '#1f77b4',
+        '#ff7f0e',
+        '#2ca02c',
+        '#d62728',
+        '#9467bd',
+        '#8c564b',
+        '#e377c2',
+        '#7f7f7f',
+        '#bcbd22',
+        '#17becf'
+    ]
     for i, label in enumerate(set(classes.values.flatten())):
         label_mask = classes.values.flatten() == label
         df[label_mask].plot(
@@ -159,14 +170,14 @@ def visualize_cell_lines_mixed(target: str, cell_line: str, path: str, classes: 
     epigenomic = epigenomic.reindex(idx)
     _, axes = plt.subplots(1, 1, figsize=(20, 20))
     tsne(
-        pd.concat([
-            pd.concat(tqdm([
-                pd.DataFrame(data=MinMaxScaler().fit_transform(MCA(
+        pd.DataFrame(data=np.hstack([
+            np.vstack([
+                MinMaxScaler().fit_transform(MCA(
                     sequence.iloc[i:i+size]
-                ).fs_r(N=50))) for i in range(0, len(sequence), size)
-            ])),
-            pd.DataFrame(data=PCA(n_components=50, random_state=42).fit_transform(epigenomic))
-        ], axis=1),
+                ).fs_r(N=50)) for i in range(0, len(sequence), size)
+            ]),
+            PCA(n_components=50, random_state=42).fit_transform(epigenomic)
+        ])),
         classes.reindex(idx),
         [np.ones(classes.size).astype(bool)],
         [axes],
