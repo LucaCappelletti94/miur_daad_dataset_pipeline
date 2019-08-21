@@ -219,7 +219,7 @@ def visualize_tasks(target: str):
             balance_mode=balance_mode.replace("umbalanced", "unbalanced")
         ).replace(" ", "_")
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        if can_run(path):
+        if can_run(cell_line) and can_run(path):
             try:
                 build_cache(path)
                 generator = balanced_holdouts_generator(target, cell_line, task, balance_mode, {
