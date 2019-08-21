@@ -221,6 +221,7 @@ def visualize_tasks(target: str):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         if can_run(cell_line) and can_run(path):
             try:
+                build_cache(cell_line)
                 build_cache(path)
                 generator = balanced_holdouts_generator(target, cell_line, task, balance_mode, {
                     "quantities": [1],
@@ -247,8 +248,10 @@ def visualize_tasks(target: str):
                     "TSNE decomposition of epigenomic data test set"
                 ])
                 save_pic(path)
+                clear_cache(cell_line)
                 clear_cache(path)
-            except Exception as e:        
+            except Exception as e:  
+                clear_cache(cell_line)      
                 clear_cache(path)
                 raise(e)
 
