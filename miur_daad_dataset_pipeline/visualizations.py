@@ -34,7 +34,8 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
         '#bcbd22',
         '#17becf'
     ]
-    for i, label in enumerate(set(classes.values.flatten())):
+    unique_classes = list(set(classes.values.flatten()))
+    for i, label in enumerate(unique_classes):
         label_mask = classes.values.flatten() == label
         df[label_mask].plot(
             kind="scatter",
@@ -46,7 +47,7 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             ax=axis,
             # To put on top the smaller cluster
             zorder=df.shape[0] - df[label_mask].shape[0],
-            alpha=0.5
+            alpha=1/len(unique_classes)
         )
     axis.set_xlim(-0.05, 1.05)
     axis.set_ylim(-0.05, 1.05)
@@ -174,7 +175,7 @@ def visualize_cell_lines_mixed(target: str, cell_line: str, path: str, classes: 
             np.vstack([
                 MinMaxScaler().fit_transform(MCA(
                     sequence.iloc[i:i+size]
-                ).fs_r(N=20)) for i in range(0, len(sequence), size)
+                ).fs_r(N=5)) for i in range(0, len(sequence), size)
             ]),
             PCA(n_components=50, random_state=42).fit_transform(epigenomic)
         ])),
@@ -254,5 +255,5 @@ def visualize_tasks(target: str):
 
 def visualize(target: str):
     with Notipy():
-        #visualize_tasks(target)
+        visualize_tasks(target)
         visualize_cell_lines(target)
