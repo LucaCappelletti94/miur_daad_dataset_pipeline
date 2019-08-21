@@ -176,7 +176,7 @@ def visualize_cell_lines_mixed(target: str, cell_line: str, path: str, classes: 
                     sequence.iloc[i:i+size]
                 ).fs_r(N=20)) for i in range(0, len(sequence), size)
             ]),
-            PCA(n_components=20, random_state=42).fit_transform(epigenomic)
+            PCA(n_components=50, random_state=42).fit_transform(epigenomic)
         ])),
         classes.reindex(idx),
         [np.ones(classes.size).astype(bool)],
