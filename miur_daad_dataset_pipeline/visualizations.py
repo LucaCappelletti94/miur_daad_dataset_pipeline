@@ -132,7 +132,7 @@ def visualize_cell_lines_nucleotides(target: str, cell_line: str, path: str, cla
     try:
         build_cache(path)
         sequence = reindex_nucleotides(load_raw_nucleotides_sequences(target, cell_line))
-        _, axes = plt.subplots(1, 1, figsize=(20, 20))
+        _, axes = plt.subplots(1, 1, figsize=(15, 15))
         mca(
             sequence,
             classes,
@@ -149,7 +149,7 @@ def visualize_cell_lines_nucleotides(target: str, cell_line: str, path: str, cla
 def visualize_cell_lines_epigenomic(target: str, cell_line: str, path: str, classes: pd.DataFrame):
     build_cache(path)
     epigenomic = load_raw_epigenomic_data(target, cell_line)
-    _, axes = plt.subplots(1, 1, figsize=(20, 20))
+    _, axes = plt.subplots(1, 1, figsize=(15, 15))
     tsne(
         epigenomic,
         classes,
@@ -168,7 +168,7 @@ def visualize_cell_lines_mixed(target: str, cell_line: str, path: str, classes: 
     sequence = sequence.reindex(idx)
     epigenomic = load_raw_epigenomic_data(target, cell_line)
     epigenomic = epigenomic.reindex(idx)
-    _, axes = plt.subplots(1, 1, figsize=(20, 20))
+    _, axes = plt.subplots(1, 1, figsize=(15, 15))
     tsne(
         pd.DataFrame(data=np.hstack([
             np.vstack([
