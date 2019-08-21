@@ -50,7 +50,7 @@ def clusterize(X: pd.DataFrame, y: pd.DataFrame, masks: List[np.array], axes: Li
         ]
     X = pd.DataFrame(data=MinMaxScaler().fit_transform(
         X), columns=["First component", 'Second component'])
-    for mask, ax, title in zip(mask, axes, titles):
+    for mask, ax, title in zip(masks, axes, titles):
         plot_clusters(X[mask], y[mask], ax, title)
 
 
