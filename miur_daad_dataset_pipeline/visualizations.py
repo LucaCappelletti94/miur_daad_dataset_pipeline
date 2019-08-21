@@ -148,42 +148,13 @@ def visualize_cell_lines_epigenomic(target: str, cell_line: str, path: str, clas
     clear_cache(path)
 
 
-def visualize_cell_lines_mixed(target: str, cell_line: str, path: str, classes: pd.DataFrame):
-    build_cache(path)
-    epigenomic = load_raw_epigenomic_data(target, cell_line)
-    sequence = reindex_nucleotides(load_raw_nucleotides_sequences(target, cell_line))
-    _, axes = plt.subplots(1, 1, figsize=(30, 30))
-    size = 50000
-    idx = np.random.permutation(epigenomic.index.values)
-    epigenomic = epigenomic.iloc[idx]
-    sequence = sequence.iloc[idx]
-    classes = classes.iloc[idx]
-    tsne(
-        pd.concat([
-            pd.concat([
-                pd.DataFrame(data=MinMaxScaler().fit_transform(MCA(
-                    sequence.loc[i:i+size-1, :]
-                ).fs_r())) for i in range(0, len(sequence), size)
-            ]), epigenomic],
-            axis=1
-        ),
-        classes,
-        [np.ones(classes.size).astype(bool)],
-        axes,
-        ["TSNE decomposition of mixed data"]
-    )
-    save_pic(path)
-    clear_cache(path)
-
-
 def visualize_cell_lines(target: str):
     for cell_line in tqdm(load_cell_lines(target)):
         path = f"visualize/decompositions/{cell_line}"
         os.makedirs(path, exist_ok=True)
         paths = [
             f"{path}/mca.png",
-            f"{path}/tsne.png",
-            f"{path}/mixed-tsne.png"
+            f"{path}/tsne.png"
         ]
         if all([not can_run(p) for p in paths]):
             continue
@@ -194,9 +165,6 @@ def visualize_cell_lines(target: str):
         if can_run(paths[1]):
             visualize_cell_lines_epigenomic(
                 target, cell_line, paths[1], classes)
-        if can_run(paths[2]):
-            visualize_cell_lines_mixed(
-                target, cell_line, paths[2], classes)
 
 
 def visualize_tasks(target: str):
