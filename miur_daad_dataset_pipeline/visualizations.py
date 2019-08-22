@@ -133,7 +133,7 @@ def build_cell_line_visualization(classes:pd.DataFrame, title:str, n:int=4):
     h = np.ceil((len(uniques)+1)/n).astype(int)
     _, axes = plt.subplots(h, n, figsize=(6*n, 6*h))
     flat_axes = np.array(axes).flatten()
-    for axis in flat_axes[len(uniques+1):]:
+    for axis in flat_axes[len(uniques)+1:]:
         axis.axis("off")
     titles = [
         f"{title} - {c}" for c in uniques
