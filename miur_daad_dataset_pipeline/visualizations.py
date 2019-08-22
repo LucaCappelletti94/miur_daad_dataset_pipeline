@@ -142,7 +142,7 @@ def build_cell_line_visualization(classes:pd.DataFrame, title:str, n:int=4):
     masks = []
     for u in uniques:
         mask = np.ones(classes.size)
-        mask[classes.values==u] = 1
+        mask[classes.values.flatten()==u] = 1
         masks.append(mask)
     masks.append(np.ones(classes.size))
     return masks, flat_axes, titles
