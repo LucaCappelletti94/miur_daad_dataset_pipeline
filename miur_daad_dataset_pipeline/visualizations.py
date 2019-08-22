@@ -128,35 +128,44 @@ def clear_cache(path: str):
     if os.path.exists(f"{path}.tmp"):
         os.remove(f"{path}.tmp")
 
+def build_cell_line_visualization(classes:pd.DataFrame, title:str, n:int=4):
+    uniques = sorted(set(classes.values))
+    h = np.ceil((len(uniques)+1)/n).astype(int)
+    _, axes = plt.subplots(h, n, figsize=(6*n, 6*h))
+    flat_axes = np.array(axes).flatten()
+    for axis in flat_axes[len(uniques+1):]:
+        axis.axis("off")
+    titles = [
+        f"{title} - {c}" for c in uniques
+    ]
+    titles.append(title)
+    masks = []
+    for u in uniques:
+        mask = np.ones(classes.size)
+        mask[classes.values==u] = 1
+        masks.append(mask)
+    masks.append(np.ones(classes.size))
+    return masks, flat_axes, titles
+
 
 def visualize_cell_lines_nucleotides(target: str, cell_line: str, path: str, classes: pd.DataFrame):
-    try:
-        build_cache(path)
-        sequence = reindex_nucleotides(load_raw_nucleotides_sequences(target, cell_line))
-        _, axes = plt.subplots(1, 1, figsize=(15, 15))
-        mca(
-            sequence,
-            classes,
-            [np.ones(classes.size).astype(bool)],
-            [axes],
-            ["MCA decomposition of sequence data"]
-        )
-        save_pic(path)
-        clear_cache(path)
-    except Exception as e:   
-        clear_cache(path)
-        raise e
+    build_cache(path)
+    sequence = reindex_nucleotides(load_raw_nucleotides_sequences(target, cell_line))
+    mca(
+        sequence,
+        classes,
+        *build_cell_line_visualization(classes, "MCA of sequence data")
+    )
+    save_pic(path)
+    clear_cache(path)
 
 def visualize_cell_lines_epigenomic(target: str, cell_line: str, path: str, classes: pd.DataFrame):
     build_cache(path)
     epigenomic = load_raw_epigenomic_data(target, cell_line)
-    _, axes = plt.subplots(1, 1, figsize=(15, 15))
     tsne(
         epigenomic,
         classes,
-        [np.ones(classes.size).astype(bool)],
-        [axes],
-        ["TSNE decomposition of epigenomic data"]
+        *build_cell_line_visualization(classes, "TSNE of epigenomic data")
     )
     save_pic(path)
     clear_cache(path)
@@ -169,7 +178,7 @@ def visualize_cell_lines_mixed(target: str, cell_line: str, path: str, classes: 
     sequence = sequence.reindex(idx)
     epigenomic = load_raw_epigenomic_data(target, cell_line)
     epigenomic = epigenomic.reindex(idx)
-    _, axes = plt.subplots(1, 1, figsize=(15, 15))
+    classes = classes.reindex(idx)
     tsne(
         pd.DataFrame(data=np.hstack([
             np.vstack([
@@ -179,10 +188,8 @@ def visualize_cell_lines_mixed(target: str, cell_line: str, path: str, classes: 
             ]),
             PCA(n_components=50, random_state=42).fit_transform(epigenomic)
         ])),
-        classes.reindex(idx),
-        [np.ones(classes.size).astype(bool)],
-        [axes],
-        ["TSNE decomposition of mixed data"]
+        classes,
+        *build_cell_line_visualization(classes, "TSNE of mixed data")
     )
     save_pic(path)
     clear_cache(path)
