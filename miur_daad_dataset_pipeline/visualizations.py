@@ -47,7 +47,7 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             ax=axis,
             # To put on top the smaller cluster
             zorder=df.shape[0] - df[label_mask].shape[0],
-            alpha=1/len(unique_classes)
+            alpha=0.5
         )
     axis.set_xlim(-0.05, 1.05)
     axis.set_ylim(-0.05, 1.05)
@@ -141,10 +141,10 @@ def build_cell_line_visualization(classes:pd.DataFrame, title:str, n:int=4):
     titles.append(title)
     masks = []
     for u in uniques:
-        mask = np.ones(classes.size)
+        mask = np.zeros(classes.size)
         mask[classes.values.flatten()==u] = 1
         masks.append(mask.astype(bool))
-    masks.append(np.ones(classes.size).astype(bool))
+    masks.append(np.zeros(classes.size).astype(bool))
     return masks, flat_axes, titles
 
 
