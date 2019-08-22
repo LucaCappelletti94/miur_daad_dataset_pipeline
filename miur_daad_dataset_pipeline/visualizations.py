@@ -129,7 +129,7 @@ def clear_cache(path: str):
         os.remove(f"{path}.tmp")
 
 def build_cell_line_visualization(classes:pd.DataFrame, title:str, n:int=4):
-    uniques = sorted(set(classes.values))
+    uniques = sorted(set(classes.values.flatten()))
     h = np.ceil((len(uniques)+1)/n).astype(int)
     _, axes = plt.subplots(h, n, figsize=(6*n, 6*h))
     flat_axes = np.array(axes).flatten()
