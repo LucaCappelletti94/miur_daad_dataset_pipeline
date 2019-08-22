@@ -22,18 +22,15 @@ matplotlib.use('Agg')
 
 
 def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
-    colors = [
-        '#1f77b4',
-        '#ff7f0e',
-        '#2ca02c',
-        '#d62728',
-        '#9467bd',
-        '#8c564b',
-        '#e377c2',
-        '#7f7f7f',
-        '#bcbd22',
-        '#17becf'
-    ]
+    colors = {
+        "A-E":'#1f77b4',
+        "A-P":'#ff7f0e',
+        "A-X":'#2ca02c',
+        "I-E":'#d62728',
+        "I-P":'#9467bd',
+        "I-X":'#8c564b',
+        "UK":'#e377c2'
+    }
     unique_classes = list(set(classes.values.flatten()))
     for i, label in enumerate(unique_classes):
         label_mask = classes.values.flatten() == label
@@ -42,7 +39,7 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             edgecolors='none',
             x=df.columns[0],
             y=df.columns[1],
-            color=colors[i],
+            color=colors[label],
             label=label,
             ax=axis,
             # To put on top the smaller cluster
@@ -144,7 +141,7 @@ def build_cell_line_visualization(classes:pd.DataFrame, title:str, n:int=4):
         mask = np.zeros(classes.size)
         mask[classes.values.flatten()==u] = 1
         masks.append(mask.astype(bool))
-    masks.append(np.zeros(classes.size).astype(bool))
+    masks.append(np.ones(classes.size).astype(bool))
     return masks, flat_axes, titles
 
 
