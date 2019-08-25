@@ -23,13 +23,13 @@ matplotlib.use('Agg')
 
 def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
     colors = {
-        "A-E":'#1f77b4',
-        "A-P":'#ff7f0e',
-        "A-X":'#2ca02c',
-        "I-E":'#d62728',
-        "I-P":'#9467bd',
-        "I-X":'#8c564b',
-        "UK":'#e377c2'
+        "A-E": '#1f77b4',
+        "A-P": '#ff7f0e',
+        "A-X": '#2ca02c',
+        "I-E": '#d62728',
+        "I-P": '#9467bd',
+        "I-X": '#8c564b',
+        "UK": '#e377c2'
     }
     unique_classes = list(set(classes.values.flatten()))
     for i, label in enumerate(unique_classes):
@@ -44,11 +44,12 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             ax=axis,
             # To put on top the smaller cluster
             zorder=df.shape[0] - df[label_mask].shape[0],
-            alpha=0.5
+            alpha=1/len(unique_classes)
         )
+        axis.get_legend().legendHandles[i].set_alpha(1)
     axis.set_xlim(-0.05, 1.05)
     axis.set_ylim(-0.05, 1.05)
-    axis.set_title(title)
+    # axis.set_title(title)
 
 
 def clusterize(X: pd.DataFrame, y: pd.DataFrame, masks: List[np.array], axes: List, titles: List[str]):
@@ -125,10 +126,11 @@ def clear_cache(path: str):
     if os.path.exists(f"{path}.tmp"):
         os.remove(f"{path}.tmp")
 
-def build_cell_line_visualization(classes:pd.DataFrame, title:str, n:int=4):
+
+def build_cell_line_visualization(classes: pd.DataFrame, title: str, n: int = 4):
     uniques = sorted(set(classes.values.flatten()))
     h = np.ceil((len(uniques)+1)/n).astype(int)
-    _, axes = plt.subplots(h, n, figsize=(6*n, 6*h))
+    _, axes = plt.subplots(h, n, figsize=(4*n, 4*h))
     flat_axes = np.array(axes).flatten()
     for axis in flat_axes[len(uniques)+1:]:
         axis.axis("off")
@@ -139,54 +141,37 @@ def build_cell_line_visualization(classes:pd.DataFrame, title:str, n:int=4):
     masks = []
     for u in uniques:
         mask = np.zeros(classes.size)
-        mask[classes.values.flatten()==u] = 1
+        mask[classes.values.flatten() == u] = 1
         masks.append(mask.astype(bool))
     masks.append(np.ones(classes.size).astype(bool))
     return masks, flat_axes, titles
 
 
-def visualize_cell_lines_nucleotides(target: str, cell_line: str, path: str, classes: pd.DataFrame):
+def build_cell_line_big_visualization(classes: pd.DataFrame, title: str):
+    _, axes = plt.subplots(1, 1, figsize=(8, 8))
+    return [np.ones(classes.size).astype(bool)], [axes], [title]
+
+
+def visualize_cell_lines_nucleotides(target: str, cell_line: str, path: str, classes: pd.DataFrame, args):
     build_cache(path)
-    sequence = reindex_nucleotides(load_raw_nucleotides_sequences(target, cell_line))
+    sequence = reindex_nucleotides(
+        load_raw_nucleotides_sequences(target, cell_line))
     mca(
         sequence,
         classes,
-        *build_cell_line_visualization(classes, "MCA of sequence data")
+        *args
     )
     save_pic(path)
     clear_cache(path)
 
-def visualize_cell_lines_epigenomic(target: str, cell_line: str, path: str, classes: pd.DataFrame):
+
+def visualize_cell_lines_epigenomic(target: str, cell_line: str, path: str, classes: pd.DataFrame, args):
     build_cache(path)
     epigenomic = load_raw_epigenomic_data(target, cell_line)
     tsne(
         epigenomic,
         classes,
-        *build_cell_line_visualization(classes, "TSNE of epigenomic data")
-    )
-    save_pic(path)
-    clear_cache(path)
-
-def visualize_cell_lines_mixed(target: str, cell_line: str, path: str, classes: pd.DataFrame):
-    size = 50000
-    build_cache(path)
-    sequence = reindex_nucleotides(load_raw_nucleotides_sequences(target, cell_line))
-    idx = np.random.permutation(sequence.index.values)
-    sequence = sequence.reindex(idx)
-    epigenomic = load_raw_epigenomic_data(target, cell_line)
-    epigenomic = epigenomic.reindex(idx)
-    classes = classes.reindex(idx)
-    tsne(
-        pd.DataFrame(data=np.hstack([
-            np.vstack([
-                MinMaxScaler().fit_transform(MCA(
-                    sequence.iloc[i:i+size]
-                ).fs_r(N=5)) for i in range(0, len(sequence), size)
-            ]),
-            PCA(n_components=50, random_state=42).fit_transform(epigenomic)
-        ])),
-        classes,
-        *build_cell_line_visualization(classes, "TSNE of mixed data")
+        *args
     )
     save_pic(path)
     clear_cache(path)
@@ -199,20 +184,24 @@ def visualize_cell_lines(target: str):
         paths = [
             f"{path}/mca.png",
             f"{path}/tsne.png",
-            f"{path}/mixed.png"
+            f"{path}/big-mca.png",
+            f"{path}/big-tsne.png",
         ]
         if all([not can_run(p) for p in paths]):
             continue
         classes = load_raw_classes(target, cell_line)
         if can_run(paths[0]):
             visualize_cell_lines_nucleotides(
-                target, cell_line, paths[0], classes)
+                target, cell_line, paths[0], classes, build_cell_line_visualization(classes, "MCA of sequence data"))
         if can_run(paths[1]):
             visualize_cell_lines_epigenomic(
-                target, cell_line, paths[1], classes)
+                target, cell_line, paths[1], classes, build_cell_line_visualization(classes, "TSNE of epigenomic data"))
         if can_run(paths[2]):
-            visualize_cell_lines_mixed(
-                target, cell_line, paths[2], classes)
+            visualize_cell_lines_nucleotides(
+                target, cell_line, paths[2], classes, build_cell_line_big_visualization(classes, "Big MCA"))
+        if can_run(paths[3]):
+            visualize_cell_lines_epigenomic(
+                target, cell_line, paths[3], classes, build_cell_line_big_visualization(classes, "Big TSNE"))
 
 
 def visualize_tasks(target: str):
@@ -232,15 +221,16 @@ def visualize_tasks(target: str):
                     "test_sizes": [0.3]
                 }, verbose=False)
                 ((train_epigenomic, train_sequence, train_classes), (test_epigenomic,
-                                                                    test_sequence, test_classes)), _, _ = next(generator())
+                                                                     test_sequence, test_classes)), _, _ = next(generator())
                 epigenomic = np.vstack([train_epigenomic, test_epigenomic])
                 sequence = reindex_nucleotides(
                     np.vstack([train_sequence, test_sequence]))
-                classes = labelize(np.hstack([train_classes, test_classes]), task)
+                classes = labelize(
+                    np.hstack([train_classes, test_classes]), task)
                 mask = np.zeros(classes.size)
                 mask[:train_classes.size] = 1
                 mask = mask.astype(bool)
-                _, axes = plt.subplots(1, 4, figsize=(6*4, 6))
+                _, axes = plt.subplots(1, 4, figsize=(4*4, 4))
                 masks = [mask, ~mask]
 
                 mca(sequence, classes, masks, axes[:2], [
@@ -254,8 +244,8 @@ def visualize_tasks(target: str):
                 save_pic(path)
                 clear_cache(cell_line)
                 clear_cache(path)
-            except Exception as e:  
-                clear_cache(cell_line)      
+            except Exception as e:
+                clear_cache(cell_line)
                 clear_cache(path)
                 raise(e)
 
