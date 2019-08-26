@@ -22,14 +22,26 @@ matplotlib.use('Agg')
 
 
 def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
-    colors = {
-        "A-E": '#1f77b4',
-        "A-P": '#ff7f0e',
-        "A-X": '#2ca02c',
-        "I-E": '#d62728',
-        "I-P": '#9467bd',
-        "I-X": '#8c564b',
-        "UK": '#e377c2'
+    colors = [
+        '#1f77b4',
+        '#ff7f0e',
+        '#2ca02c',
+        '#d62728',
+        '#9467bd',
+        '#8c564b',
+        '#e377c2'
+    ]
+    
+    colors_map = {
+        "A-E": 0,
+        "A-P": 1,
+        "A-X": 2,
+        "I-E": 3,
+        "I-P": 4,
+        "I-X": 5,
+        "UK": 6,
+        "A-X, I-E, I-P, I-X, UK": 1,
+        "A-E, A-P": 0
     }
     unique_classes = list(set(classes.values.flatten()))
     for i, label in enumerate(unique_classes):
@@ -39,7 +51,7 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             edgecolors='none',
             x=df.columns[0],
             y=df.columns[1],
-            color=colors[label],
+            color=colors_map[colors[label]],
             label=label,
             ax=axis,
             # To put on top the smaller cluster
