@@ -162,7 +162,7 @@ def build_cell_line_visualization(classes: pd.DataFrame, title: str, n: int = 4)
 
 
 def build_cell_line_big_visualization(classes: pd.DataFrame, title: str):
-    _, axes = plt.subplots(1, 1, figsize=(8, 8))
+    _, axes = plt.subplots(1, 1, figsize=(7, 7))
     return [np.ones(classes.size).astype(bool)], [axes], [title]
 
 
