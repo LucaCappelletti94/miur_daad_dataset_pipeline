@@ -51,7 +51,7 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             edgecolors='none',
             x=df.columns[0],
             y=df.columns[1],
-            color=colors_map[colors[label]],
+            color=colors[colors_map[label]],
             s=0.1,
             ax=axis,
             # To put on top the smaller cluster
