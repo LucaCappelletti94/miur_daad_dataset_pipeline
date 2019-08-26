@@ -52,7 +52,7 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             x=df.columns[0],
             y=df.columns[1],
             color=colors[colors_map[label]],
-            s=0.1,
+            s=1,
             label=label,
             ax=axis,
             # To put on top the smaller cluster
@@ -60,6 +60,7 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             alpha=0.6
         )
         axis.get_legend().legendHandles[i].set_alpha(1)
+        axis.get_legend().legendHandles[i].set_markersize(6)
     axis.set_xlim(-0.05, 1.05)
     axis.set_ylim(-0.05, 1.05)
     # axis.set_title(title)
