@@ -52,11 +52,11 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             x=df.columns[0],
             y=df.columns[1],
             color=colors_map[colors[label]],
-            label=label,
+            s=0.1,
             ax=axis,
             # To put on top the smaller cluster
             zorder=df.shape[0] - df[label_mask].shape[0],
-            alpha=1/len(unique_classes)
+            alpha=0.6
         )
         axis.get_legend().legendHandles[i].set_alpha(1)
     axis.set_xlim(-0.05, 1.05)
