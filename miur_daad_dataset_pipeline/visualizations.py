@@ -53,6 +53,7 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             y=df.columns[1],
             color=colors[colors_map[label]],
             s=0.1,
+            label=label,
             ax=axis,
             # To put on top the smaller cluster
             zorder=df.shape[0] - df[label_mask].shape[0],
