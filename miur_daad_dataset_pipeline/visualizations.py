@@ -271,7 +271,7 @@ def build_mca_job(job: Tuple):
 
 def build_mca(target: str):
     for cell_line in tqdm(load_cell_lines(target), desc="Buiding epigenomic data PCA."):
-        path = f"{cell_line}-pca.csv"
+        path = f"{cell_line}-mca.csv"
         if not can_run(path):
             continue
         build_cache(path)
