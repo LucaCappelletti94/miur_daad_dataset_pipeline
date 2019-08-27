@@ -270,13 +270,15 @@ def build_mca_job(job: Tuple):
 
 
 def build_mca(target: str):
-    jobs = [
-        (target, cell_line) for cell_line in load_cell_lines(target)
-    ]
-    with Pool(min(cpu_count(), len(jobs))) as p:
-        list(tqdm(p.imap(build_mca_job, jobs),
-                  desc="Buiding nucleotide sequences MCA.", total=len(jobs)))
-
+    for cell_line in tqdm(load_cell_lines(target), desc="Buiding epigenomic data PCA."):
+        path = f"{cell_line}-pca.csv"
+        if not can_run(path):
+            continue
+        build_cache(path)
+        mca(reindex_nucleotides(
+            load_raw_nucleotides_sequences(target, cell_line))
+            ).to_csv(path)
+        clear_cache(path)
 
 def visualize(target: str):
     with Notipy():
