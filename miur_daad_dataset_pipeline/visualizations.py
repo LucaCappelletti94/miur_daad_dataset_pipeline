@@ -54,7 +54,7 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             x=df.columns[0],
             y=df.columns[1],
             color=colors[colors_map[label]],
-            s=1,
+            s=5,
             label=label,
             ax=axis,
             # To put on top the smaller cluster
@@ -62,11 +62,11 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             alpha=0.6
         )
         axis.get_legend().legendHandles[i].set_alpha(1)
-        axis.get_legend().legendHandles[i]._legmarker.set_markersize(6)
+        axis.get_legend().legendHandles[i]._sizes = [50]
     axis.get_legend().set_title("Classes")
     axis.set_xlim(-0.05, 1.05)
     axis.set_ylim(-0.05, 1.05)
-    # axis.set_title(title)
+    axis.set_title(title)
 
 
 def clusterize(X: pd.DataFrame, y: pd.DataFrame, masks: List[np.array], axes: List, titles: List[str]):
@@ -75,28 +75,26 @@ def clusterize(X: pd.DataFrame, y: pd.DataFrame, masks: List[np.array], axes: Li
         X, y, masks = X[std_mask], y[std_mask], [
             mask[std_mask] for mask in masks
         ]
-    X = pd.DataFrame(data=MinMaxScaler().fit_transform(
-        X), columns=["First component", 'Second component'])
+    X = pd.DataFrame(data=MinMaxScaler().fit_transform(X), columns=["First component", 'Second component'])
     for mask, ax, title in zip(masks, axes, titles):
         plot_clusters(X[mask], y[mask], ax, title)
 
 
 def tsne(X: pd.DataFrame):
-    return TSNE(n_jobs=cpu_count(), verbose=0, random_state=42).fit_transform(
+    return pd.DataFrame(TSNE(n_jobs=cpu_count(), verbose=0, random_state=42).fit_transform(
         PCA(n_components=50, random_state=42).fit_transform(X)
-    )
+    ), index=X.index)
 
 
 def mca(X: pd.DataFrame):
     size = 50000
     idx = np.random.permutation(X.index.values)
     X = X.reindex(idx)
-    pd.concat([
+    return pd.concat([
         pd.DataFrame(data=MinMaxScaler().fit_transform(MCA(
             X.iloc[i:i+size]
-        ).fs_r(N=2))) for i in range(0, len(X), size)
-    ])
-    return X.reindex(sorted(X.index.values))
+        ).fs_r(N=2)), index=X.iloc[i:i+size].index) for i in range(0, len(X), size)
+    ]).reindex(sorted(X.index.values))
 
 
 def labelize(classes: np.ndarray, task: Dict) -> pd.DataFrame:
@@ -159,102 +157,95 @@ def build_cell_line_big_visualization(classes: pd.DataFrame, title: str):
     return [np.ones(classes.size).astype(bool)], [axes], [title]
 
 
-# def visualize_cell_lines_nucleotides(target: str, cell_line: str, path: str, classes: pd.DataFrame, args):
-#     build_cache(path)
-#     sequence = reindex_nucleotides(
-#         load_raw_nucleotides_sequences(target, cell_line))
-#     mca(
-#         sequence,
-#         classes,
-#         *args
-#     )
-#     save_pic(path)
-#     clear_cache(path)
+def visualize_cell_lines_nucleotides(target: str, cell_line: str, path: str, classes: pd.DataFrame, args):
+    build_cache(path)
+    sequence = pd.read_csv(f"{cell_line}-mca.csv", index_col=[0]).values
+    clusterize(sequence, classes, *args)
+    save_pic(path)
+    clear_cache(path)
 
 
-# def visualize_cell_lines_epigenomic(target: str, cell_line: str, path: str, classes: pd.DataFrame, args):
-#     build_cache(path)
-#     epigenomic = load_raw_epigenomic_data(target, cell_line)
-#     tsne(
-#         epigenomic,
-#         classes,
-#         *args
-#     )
-#     save_pic(path)
-#     clear_cache(path)
+def visualize_cell_lines_epigenomic(target: str, cell_line: str, path: str, classes: pd.DataFrame, args):
+    build_cache(path)
+    epigenomic = pd.read_csv(f"{cell_line}-tsne.csv", index_col=[0]).values
+    clusterize(epigenomic, classes, *args)
+    save_pic(path)
+    clear_cache(path)
 
 
-# def visualize_cell_lines(target: str):
-#     for cell_line in tqdm(load_cell_lines(target)):
-#         path = f"visualize/decompositions/{cell_line}"
-#         os.makedirs(path, exist_ok=True)
-#         paths = [
-#             f"{path}/mca.png",
-#             f"{path}/tsne.png",
-#             f"{path}/big-mca.png",
-#             f"{path}/big-tsne.png",
-#         ]
-#         if all([not can_run(p) for p in paths]):
-#             continue
-#         classes = load_raw_classes(target, cell_line)
-#         if can_run(paths[0]):
-#             visualize_cell_lines_nucleotides(
-#                 target, cell_line, paths[0], classes, build_cell_line_visualization(classes, "MCA of sequence data"))
-#         if can_run(paths[1]):
-#             visualize_cell_lines_epigenomic(
-#                 target, cell_line, paths[1], classes, build_cell_line_visualization(classes, "TSNE of epigenomic data"))
-#         if can_run(paths[2]):
-#             visualize_cell_lines_nucleotides(
-#                 target, cell_line, paths[2], classes, build_cell_line_big_visualization(classes, "MCA of sequence data"))
-#         if can_run(paths[3]):
-#             visualize_cell_lines_epigenomic(
-#                 target, cell_line, paths[3], classes, build_cell_line_big_visualization(classes, "TSNE of epigenomic data"))
+def visualize_cell_lines(target: str):
+    for cell_line in tqdm(load_cell_lines(target)):
+        path = f"visualize/decompositions/{cell_line}"
+        os.makedirs(path, exist_ok=True)
+        paths = [
+            f"{path}/mca.png",
+            f"{path}/tsne.png",
+            f"{path}/big-mca.png",
+            f"{path}/big-tsne.png",
+        ]
+        if all([not can_run(p) for p in paths]):
+            continue
+        classes = load_raw_classes(target, cell_line)
+        if can_run(paths[0]):
+            visualize_cell_lines_nucleotides(
+                target, cell_line, paths[0], classes, build_cell_line_visualization(classes, "MCA of sequence data"))
+        if can_run(paths[1]):
+            visualize_cell_lines_epigenomic(
+                target, cell_line, paths[1], classes, build_cell_line_visualization(classes, "TSNE of epigenomic data"))
+        if can_run(paths[2]):
+            visualize_cell_lines_nucleotides(
+                target, cell_line, paths[2], classes, build_cell_line_big_visualization(classes, "MCA of sequence data"))
+        if can_run(paths[3]):
+            visualize_cell_lines_epigenomic(
+                target, cell_line, paths[3], classes, build_cell_line_big_visualization(classes, "TSNE of epigenomic data"))
 
 
-# def visualize_tasks(target: str):
-#     for target, cell_line, task, balance_mode in tasks_generator(target):
-#         path = "visualize/decompositions/{cell_line}/{cell_line}-{balance_mode}-{task}.png".format(
-#             task=task["name"],
-#             cell_line=cell_line,
-#             balance_mode=balance_mode.replace("umbalanced", "unbalanced")
-#         ).replace(" ", "_")
-#         if not (can_run(cell_line) and can_run(path)):
-#             continue
+def visualize_tasks(target: str):
+    tasks = list(tasks_generator(target))
+    for target, cell_line, task, balance_mode in tqdm(tasks, total=len(tasks)):
+        path = "visualize/decompositions/{cell_line}/{cell_line}-{balance_mode}-{task}.png".format(
+            task=task["name"],
+            cell_line=cell_line,
+            balance_mode=balance_mode.replace("umbalanced", "unbalanced")
+        ).replace(" ", "_")
+        if not (can_run(cell_line) and can_run(path)):
+            continue
 
-#         os.makedirs(os.path.dirname(path), exist_ok=True)
-#         build_cache(path)
-#         classes = load_raw_classes(target, cell_line)
-#         epigenomic = pd.read_csv(f"{cell_line}-tsne.csv")
-#         sequence = pd.read_csv(f"{cell_line}-mca.csv")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        build_cache(path)
+        classes = load_raw_classes(target, cell_line)
 
-#         balancer = get_callback(balance_mode)
-#         epigenomic_train, epigenomic_test, sequence_train, sequence_test, classes_train, classes_test = train_test_split(
-#             epigenomic, sequence, classes, test_size=0.3, random_state=42)
+        epigenomic = pd.read_csv(f"{cell_line}-tsne.csv", index_col=[0]).values
+        sequence = pd.read_csv(f"{cell_line}-mca.csv", index_col=[0]).values
+
+        balancer = get_callback(balance_mode)
+        epigenomic_train, epigenomic_test, sequence_train, sequence_test, classes_train, classes_test = train_test_split(
+            epigenomic, sequence, classes, test_size=0.3, random_state=42)
         
-#         epigenomic_train, sequence_train, classes_train, epigenomic_test, sequence_test, classes_test = balancer(
-#             (epigenomic_train, sequence_train, classes_train),
-#             (epigenomic_test, sequence_test, classes_test)
-#         )
+        (epigenomic_train, sequence_train, classes_train), (epigenomic_test, sequence_test, classes_test) = balancer(
+            (epigenomic_train, sequence_train, classes_train),
+            (epigenomic_test, sequence_test, classes_test)
+        )
 
-#         classes = labelize(np.hstack([classes_train, classes_test]), task)
-#         epigenomic = np.vstack([epigenomic_train, epigenomic_test])
-#         sequence = np.vstack([sequence_train, sequence_test])
-#         mask = np.zeros(classes.size)
-#         mask[:classes_train.size] = 1
-#         mask = mask.astype(bool)
-#         _, axes = plt.subplots(1, 4, figsize=(4*4, 4))
-#         masks = [mask, ~mask]
-
-#         mca(sequence, classes, masks, axes[:2], [
-#             "MCA decomposition of sequence data train set",
-#             "MCA decomposition of sequence data test set"
-#         ])
-#         tsne(epigenomic, classes, masks, axes[2:], [
-#             "TSNE decomposition of epigenomic data train set",
-#             "TSNE decomposition of epigenomic data test set"
-#         ])
-#         save_pic(path)
-#         clear_cache(path)
+        classes = labelize(np.vstack([classes_train, classes_test]), task)
+        epigenomic = np.vstack([epigenomic_train, epigenomic_test])
+        sequence = np.vstack([sequence_train, sequence_test])
+        mask = np.zeros(classes.size)
+        mask[:classes_train.size] = 1
+        mask = mask.astype(bool)
+        _, axes = plt.subplots(1, 4, figsize=(4*4, 4))
+        masks = [mask, ~mask]
+        
+        clusterize(sequence, classes, masks, axes[:2], [
+            "MCA - Sequence data - Train set",
+            "MCA - Sequence data - Test set"
+        ])
+        clusterize(epigenomic, classes, masks, axes[2:], [
+            "TSNE - Epigenomic data - Train set",
+            "TSNE - Epigenomic data - Test set"
+        ])
+        save_pic(path)
+        clear_cache(path)
 
 
 def build_tsne(target: str):
@@ -282,7 +273,7 @@ def build_mca(target: str):
     jobs = [
         (target, cell_line) for cell_line in load_cell_lines(target)
     ]
-    with Pool(cpu_count()) as p:
+    with Pool(min(cpu_count(), len(jobs))) as p:
         list(tqdm(p.imap(build_mca_job, jobs),
                   desc="Buiding nucleotide sequences MCA.", total=len(jobs)))
 
@@ -291,5 +282,5 @@ def visualize(target: str):
     with Notipy():
         build_mca(target)
         build_tsne(target)
-        #visualize_tasks(target)
-        #visualize_cell_lines(target)
+        visualize_tasks(target)
+        visualize_cell_lines(target)
