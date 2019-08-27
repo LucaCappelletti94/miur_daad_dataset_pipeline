@@ -83,7 +83,7 @@ def clusterize(X: pd.DataFrame, y: pd.DataFrame, masks: List[np.array], axes: Li
 
 def tsne(X: pd.DataFrame):
     return pd.DataFrame(TSNE(n_jobs=cpu_count(), verbose=0, random_state=42).fit_transform(
-        PCA(n_components=50, random_state=42).fit_transform(X)
+        PCA(n_components=50, random_state=42).fit_transform(X) if X.shape[1] > 50 else X
     ), index=X.index)
 
 
@@ -302,8 +302,8 @@ def build_mca(target: str):
         clear_cache(path)
 
 def visualize(target: str):
-    #with Notipy():
-    build_mca(target)
-    build_tsne(target)
-    visualize_tasks(target)
-    visualize_cell_lines(target)
+    with Notipy():
+        build_mca(target)
+        build_tsne(target)
+        visualize_tasks(target)
+        visualize_cell_lines(target)
