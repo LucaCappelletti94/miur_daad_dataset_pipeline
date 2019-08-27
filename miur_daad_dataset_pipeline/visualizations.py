@@ -91,12 +91,11 @@ def mca(X: pd.DataFrame):
     size = 50000
     idx = np.random.permutation(X.index.values)
     X = X.reindex(idx)
-    partial = pd.concat([
+    return pd.concat([
         pd.DataFrame(data=MinMaxScaler().fit_transform(MCA(
             X.iloc[i:i+size]
-        ).fs_r(N=20)), index=X.iloc[i:i+size].index) for i in range(0, len(X), size)
+        ).fs_r(N=2)), index=X.iloc[i:i+size].index) for i in range(0, len(X), size)
     ]).reindex(sorted(X.index.values))
-    return tsne(partial)
 
 
 def labelize(classes: np.ndarray, task: Dict) -> pd.DataFrame:
