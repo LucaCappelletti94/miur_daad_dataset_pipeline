@@ -60,7 +60,8 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
             alpha=0.6
         )
         axis.get_legend().legendHandles[i].set_alpha(1)
-        axis.get_legend().legendHandles[i].set_markersize(6)
+        axis.get_legend().legendHandles[i]._legmarker.set_markersize(6)
+    axis.get_legend().set_title("Classes")
     axis.set_xlim(-0.05, 1.05)
     axis.set_ylim(-0.05, 1.05)
     # axis.set_title(title)
@@ -76,6 +77,7 @@ def clusterize(X: pd.DataFrame, y: pd.DataFrame, masks: List[np.array], axes: Li
         X), columns=["First component", 'Second component'])
     for mask, ax, title in zip(masks, axes, titles):
         plot_clusters(X[mask], y[mask], ax, title)
+
 
 
 def tsne(X: pd.DataFrame, y: pd.DataFrame, masks: List[np.array], axes: List, titles: List[str]):
