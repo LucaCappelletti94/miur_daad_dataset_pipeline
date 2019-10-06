@@ -23,6 +23,15 @@ from scipy import stats
 matplotlib.use('Agg')
 
 
+def inverse_sigmoid(x):
+    return 1/(1-np.exp(5*(x-0.5)))
+
+def normalize_radius(n, min_n, max_n):
+    if min_n == max_n:
+        return 1
+    return 1-(n-min_n)/(max_n - min_n)
+
+
 def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
     colors = [
         '#1f77b4',
@@ -46,25 +55,32 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
         "A-E, A-P": 0
     }
     unique_classes = list(set(classes.values.flatten()))
+    total_elements = df.shape[0]
+    cardinalities = [
+        df[classes.values.flatten() == label].shape[0] for label in unique_classes
+    ]
+    max_elements = max(cardinalities)
+    min_elements = min(cardinalities)
     for i, label in enumerate(unique_classes):
         label_mask = classes.values.flatten() == label
+        class_elements = df[label_mask].shape[0]
         df[label_mask].plot(
             kind="scatter",
             edgecolors='none',
             x=df.columns[0],
             y=df.columns[1],
             color=colors[colors_map[label]],
-            s=1,
+            s=5,# + 2*normalize_radius(class_elements, min_elements, max_elements),
             label=label,
             ax=axis,
             # To put on top the smaller cluster
-            zorder=df.shape[0] - df[label_mask].shape[0],
-            alpha=0.7
+            zorder=total_elements - class_elements,
+            alpha=0.6
         )
         axis.get_legend().legendHandles[i].set_alpha(1)
         axis.get_legend().legendHandles[i]._sizes = [50]
     axis.get_legend().set_title("Classes")
-    axis.get_legend().set_zorder(df.shape[0])
+    axis.get_legend().set_zorder(total_elements)
     axis.set_xlim(-0.05, 1.05)
     axis.set_ylim(-0.05, 1.05)
     axis.set_title(title)
@@ -216,8 +232,8 @@ def visualize_tasks_job(job:Tuple):
         cell_line=cell_line,
         balance_mode=balance_mode.replace("umbalanced", "unbalanced")
     ).replace(" ", "_")
-    if not (can_run(cell_line) and can_run(path)):
-        return
+    #if not (can_run(cell_line) and can_run(path)):
+    #    return
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
     build_cache(path)
@@ -241,7 +257,10 @@ def visualize_tasks_job(job:Tuple):
         (epigenomic_test, sequence_test, classes_test)
     )
 
-    classes = labelize(np.vstack([classes_train, classes_test]), task)
+    classes = labelize(np.array([
+        int(c in task["positive"]) for c in np.vstack([classes_train, classes_test])
+    ]), task)
+
     epigenomic = np.vstack([epigenomic_train, epigenomic_test])
     sequence = np.vstack([sequence_train, sequence_test])
     mask = np.zeros(classes.size)
@@ -301,8 +320,9 @@ def build_mca(target: str):
         clear_cache(path)
 
 def visualize(target: str):
-    with Notipy():
-        build_mca(target)
-        build_tsne(target)
-        visualize_tasks(target)
-        visualize_cell_lines(target)
+    matplotlib.rcParams['figure.dpi'] = 400
+    #with Notipy():
+    build_mca(target)
+    build_tsne(target)
+    visualize_tasks(target)
+    #visualize_cell_lines(target)
