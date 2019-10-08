@@ -27,7 +27,7 @@ def balanced_generator(generator:Generator, balance: Callable, positive:List[str
     return wrapper
 
 
-def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance_mode: str, holdouts:Dict, verbose:bool=True, root:str=".holdouts"):
+def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance_mode: str, holdouts:Dict, verbose:bool=True, cache_dir:str=".holdouts"):
     classes = load_raw_classes(target, cell_line).values
     used_classes = task["positive"] + task["negative"]
     mask = np.array([
@@ -53,21 +53,16 @@ def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance
         classes,
         holdouts=random_holdouts(**holdouts),
         skip=skip,
-        cache_dir="{root}/{target}/{cell_line}/{name}".format(
-            root=root,
-            target=target.split("/")[-1],
-            cell_line=cell_line,
-            name=task["name"].replace(" ", "_")
-        ),
+        cache_dir=cache_dir,
         verbose=verbose
     )
     return balanced_generator(generator, get_callback(balance_mode), task["positive"])
 
-def task_builder(target:str, holdouts:Dict, root:str=".holdouts"):
+def task_builder(target:str, holdouts:Dict, cache_dir:str=".holdouts"):
     with Notipy() as report:
         tasks = list(tasks_generator(target))
         for i, task in tqdm(enumerate(tasks), total=len(tasks), desc="Build tasks"):
-            generator = balanced_holdouts_generator(*task, holdouts, root=root)
+            generator = balanced_holdouts_generator(*task, holdouts, cache_dir=cache_dir)
             for _, _, sub_generator in generator():
                 if sub_generator is not None:
                     for _ in sub_generator():
