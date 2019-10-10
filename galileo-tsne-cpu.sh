@@ -5,8 +5,8 @@
 #SBATCH --mem=100GB
 #SBATCH --time 3:00:00
 #SBATCH --job-name=CNN-CPU-VISUALIZATION
-BASEDIR="/gpfs/work/ELIX4_valentin/cnn/miur_daad_dataset_pipeline"
-VENVPYTHONDIR="/gpfs/work/ELIX4_valentin/cnn/cnn_cpu_venv"
+BASEDIR="/gpfs/work/ELIX4_valentin/mlp_vs_cnn/miur_daad_dataset_pipeline"
+VENVPYTHONDIR="/gpfs/work/ELIX4_valentin/mlp_vs_cnn/mlp_vs_cnn_venv"
 cd $BASEDIR
 module load python/3.6.4
 source $VENVPYTHONDIR/bin/activate
