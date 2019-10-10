@@ -51,7 +51,7 @@ def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance
     generator = cached_holdouts_generator(
         *data,
         classes,
-        holdouts=random_holdouts(**holdouts),
+        holdouts=random_holdouts(**holdouts, hyper_parameters=task),
         skip=skip,
         cache_dir=cache_dir,
         verbose=verbose

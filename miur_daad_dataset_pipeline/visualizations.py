@@ -97,13 +97,13 @@ def clusterize(X: pd.DataFrame, y: pd.DataFrame, masks: List[np.array], axes: Li
         plot_clusters(X[mask], y[mask], ax, title)
 
 
-def tsne(X: pd.DataFrame):
+def tsne(X: pd.DataFrame, dimensions:int):
     return pd.DataFrame(TSNE(n_jobs=cpu_count(), verbose=0, random_state=42).fit_transform(
         PCA(n_components=50, random_state=42).fit_transform(X) if X.shape[1] > 50 else X
     ), index=X.index)
 
 
-def mca(X: pd.DataFrame):
+def mca(X: pd.DataFrame, dimensions:int):
     size = 50000
     idx = np.random.permutation(X.index.values)
     X = X.reindex(idx)
@@ -293,29 +293,36 @@ def build_tsne(target: str):
         if not can_run(path):
             continue
         build_cache(path)
-        tsne(load_raw_epigenomic_data(target, cell_line)).to_csv(path)
+        tsne(load_raw_epigenomic_data(target, cell_line), 2).to_csv(path)
         clear_cache(path)
 
-
-def build_mca_job(job: Tuple):
-    target, cell_line = job
-    path = f"{cell_line}-mca.csv"
-    if can_run(path):
+    for cell_line in tqdm(load_cell_lines(target), desc="Buiding epigenomic data TSNE."):
+        path = f"{cell_line}-tsne3.csv"
+        if not can_run(path):
+            continue
         build_cache(path)
-        mca(reindex_nucleotides(
-            load_raw_nucleotides_sequences(target, cell_line))
-            ).to_csv(path)
+        tsne(load_raw_epigenomic_data(target, cell_line), 3).to_csv(path)
         clear_cache(path)
 
 
 def build_mca(target: str):
-    for cell_line in tqdm(load_cell_lines(target), desc="Buiding epigenomic data PCA."):
+    for cell_line in tqdm(load_cell_lines(target), desc="Buiding epigenomic data MCA."):
         path = f"{cell_line}-mca.csv"
         if not can_run(path):
             continue
         build_cache(path)
         mca(reindex_nucleotides(
-            load_raw_nucleotides_sequences(target, cell_line))
+            load_raw_nucleotides_sequences(target, cell_line)), 2
+            ).to_csv(path)
+        clear_cache(path)
+
+    for cell_line in tqdm(load_cell_lines(target), desc="Buiding epigenomic data MCA."):
+        path = f"{cell_line}-mca3.csv"
+        if not can_run(path):
+            continue
+        build_cache(path)
+        mca(reindex_nucleotides(
+            load_raw_nucleotides_sequences(target, cell_line)), 3
             ).to_csv(path)
         clear_cache(path)
 
@@ -324,5 +331,5 @@ def visualize(target: str):
     #with Notipy():
     build_mca(target)
     build_tsne(target)
-    visualize_tasks(target)
+    #visualize_tasks(target)
     #visualize_cell_lines(target)
