@@ -20,11 +20,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 from scipy import stats
+from ddd_subplots import subplots, rotate
 matplotlib.use('Agg')
 
 
 def inverse_sigmoid(x):
     return 1/(1-np.exp(5*(x-0.5)))
+
 
 def normalize_radius(n, min_n, max_n):
     if min_n == max_n:
@@ -32,7 +34,7 @@ def normalize_radius(n, min_n, max_n):
     return 1-(n-min_n)/(max_n - min_n)
 
 
-def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
+def plot_clusters(*X: Tuple[np.ndarray], classes: pd.DataFrame, axis, title: str):
     colors = [
         '#1f77b4',
         '#ff7f0e',
@@ -54,33 +56,26 @@ def plot_clusters(df: pd.DataFrame, classes: pd.DataFrame, axis, title: str):
         "A-X, I-E, I-P, I-X, UK": 1,
         "A-E, A-P": 0
     }
+    X = np.array(X).T
     unique_classes = list(set(classes.values.flatten()))
-    total_elements = df.shape[0]
-    cardinalities = [
-        df[classes.values.flatten() == label].shape[0] for label in unique_classes
-    ]
-    max_elements = max(cardinalities)
-    min_elements = min(cardinalities)
+    total_elements = X.shape[0]
     for i, label in enumerate(unique_classes):
         label_mask = classes.values.flatten() == label
-        class_elements = df[label_mask].shape[0]
-        df[label_mask].plot(
-            kind="scatter",
+        class_elements = np.sum(label_mask)
+        axis.scatter(
+            *X[label_mask].T,
             edgecolors='none',
-            x=df.columns[0],
-            y=df.columns[1],
             color=colors[colors_map[label]],
-            s=5,# + 2*normalize_radius(class_elements, min_elements, max_elements),
+            s=5,
             label=label,
-            ax=axis,
             # To put on top the smaller cluster
             zorder=total_elements - class_elements,
             alpha=0.6
         )
-        axis.get_legend().legendHandles[i].set_alpha(1)
-        axis.get_legend().legendHandles[i]._sizes = [50]
+    #     axis.get_legend().legendHandles[i].set_alpha(1)
+    #     axis.get_legend().legendHandles[i]._sizes = [50]
     axis.get_legend().set_title("Classes")
-    axis.get_legend().set_zorder(total_elements)
+    # axis.get_legend().set_zorder(total_elements)
     axis.set_xlim(-0.05, 1.05)
     axis.set_ylim(-0.05, 1.05)
     axis.set_title(title)
@@ -92,25 +87,48 @@ def clusterize(X: pd.DataFrame, y: pd.DataFrame, masks: List[np.array], axes: Li
         X, y, masks = X[std_mask], y[std_mask], [
             mask[std_mask] for mask in masks
         ]
-    X = pd.DataFrame(data=MinMaxScaler().fit_transform(X), columns=["First component", 'Second component'])
+    X = pd.DataFrame(data=MinMaxScaler().fit_transform(
+        X), columns=["First component", 'Second component'])
     for mask, ax, title in zip(masks, axes, titles):
-        plot_clusters(X[mask], y[mask], ax, title)
+        plot_clusters(
+            *X[mask].values.T,
+            classes=y[mask],
+            axis=ax,
+            title=title
+        )
 
+def clusterize_3d(*X:Tuple[np.ndarray], classes: pd.DataFrame, masks: List[np.array], subplots_args:Dict, titles: List[str]):
+    fig, axes = subplots(**subplots_args)
+    X = np.array(X).T
+    for _ in range(2):
+        std_mask = (np.abs(stats.zscore(X)) < 3).all(axis=1)
+        X, classes, masks = X[std_mask], classes[std_mask], [
+            mask[std_mask] for mask in masks
+        ]
+    for mask, ax, title in zip(masks, axes.flatten(), titles):
+        plot_clusters(
+            *X[mask].T,
+            classes=classes[mask],
+            axis=ax,
+            title=title
+        )
+    return fig, axes
 
-def tsne(X: pd.DataFrame, dimensions:int):
-    return pd.DataFrame(TSNE(n_jobs=cpu_count(), verbose=0, random_state=42).fit_transform(
-        PCA(n_components=50, random_state=42).fit_transform(X) if X.shape[1] > 50 else X
+def tsne(X: pd.DataFrame, dimensions: int):
+    return pd.DataFrame(TSNE(n_jobs=cpu_count(), verbose=0, random_state=42, n_components=dimensions).fit_transform(
+        PCA(n_components=50, random_state=42).fit_transform(
+            X) if X.shape[1] > 50 else X
     ), index=X.index)
 
 
-def mca(X: pd.DataFrame, dimensions:int):
+def mca(X: pd.DataFrame, dimensions: int):
     size = 50000
     idx = np.random.permutation(X.index.values)
     X = X.reindex(idx)
     return pd.concat([
         pd.DataFrame(data=MinMaxScaler().fit_transform(MCA(
             X.iloc[i:i+size]
-        ).fs_r(N=2)), index=X.iloc[i:i+size].index) for i in range(0, len(X), size)
+        ).fs_r(N=dimensions)), index=X.iloc[i:i+size].index) for i in range(0, len(X), size)
     ]).reindex(sorted(X.index.values))
 
 
@@ -174,6 +192,11 @@ def build_cell_line_big_visualization(classes: pd.DataFrame, title: str):
     return [np.ones(classes.size).astype(bool)], [axes], [title]
 
 
+def build_cell_line_big_visualization_3d(classes: pd.DataFrame, title: str):
+    masks, _, titles = build_cell_line_big_visualization(classes, title)
+    return masks, {"ncols":1, "nrows":1, "figsize":(7, 7)}, titles
+
+
 def visualize_cell_lines_nucleotides(target: str, cell_line: str, path: str, classes: pd.DataFrame, args):
     build_cache(path)
     sequence = pd.read_csv(f"{cell_line}-mca.csv", index_col=[0]).values
@@ -190,7 +213,14 @@ def visualize_cell_lines_epigenomic(target: str, cell_line: str, path: str, clas
     clear_cache(path)
 
 
-def visualize_cell_lines_job(job:Tuple):
+def visualize_cell_lines_epigenomic_3d(target: str, cell_line: str, path: str, classes: pd.DataFrame, masks:List, subplots_args:Dict, titles:List):
+    build_cache(path)
+    epigenomic = pd.read_csv(f"{cell_line}-tsne3.csv", index_col=[0]).values
+    rotate(clusterize_3d, *epigenomic.T, duration=3, path=path, classes=classes, masks=masks, subplots_args=subplots_args, titles=titles)
+    clear_cache(path)
+
+
+def visualize_cell_lines_job(job: Tuple):
     target, cell_line = job
     path = f"visualize/decompositions/{cell_line}"
     os.makedirs(path, exist_ok=True)
@@ -199,6 +229,7 @@ def visualize_cell_lines_job(job:Tuple):
         f"{path}/tsne.png",
         f"{path}/big-mca.png",
         f"{path}/big-tsne.png",
+        f"{path}/big-tsne3.png",
     ]
     if all([not can_run(p) for p in paths]):
         return
@@ -207,32 +238,38 @@ def visualize_cell_lines_job(job:Tuple):
         visualize_cell_lines_nucleotides(
             target, cell_line, paths[0], classes, build_cell_line_visualization(classes, "MCA of sequence data"))
     if can_run(paths[1]):
-        visualize_cell_lines_epigenomic(
-            target, cell_line, paths[1], classes, build_cell_line_visualization(classes, "TSNE of epigenomic data"))
+        visualize_cell_lines_epigenomic(target, cell_line, paths[1], classes, build_cell_line_visualization(
+            classes, "TSNE of epigenomic data"))
     if can_run(paths[2]):
         visualize_cell_lines_nucleotides(
             target, cell_line, paths[2], classes, build_cell_line_big_visualization(classes, "MCA of sequence data"))
     if can_run(paths[3]):
-        visualize_cell_lines_epigenomic(
-            target, cell_line, paths[3], classes, build_cell_line_big_visualization(classes, "TSNE of epigenomic data"))
+        visualize_cell_lines_epigenomic(target, cell_line, paths[3], classes, build_cell_line_big_visualization(
+            classes, "TSNE of epigenomic data"))
+    if can_run(paths[4]):
+        visualize_cell_lines_epigenomic_3d(
+            target, cell_line, paths[4], classes, *build_cell_line_big_visualization_3d(classes, "TSNE of epigenomic data"))
 
 
 def visualize_cell_lines(target: str):
     jobs = [
         (target, cell_line) for cell_line in load_cell_lines(target)
     ]
-    with Pool(cpu_count()) as p:
-        list(tqdm(p.imap(visualize_cell_lines_job, jobs), total=len(jobs), desc="Visualizing tasks"))        
+    # with Pool(cpu_count()) as p:
+    #     list(tqdm(p.imap(visualize_cell_lines_job, jobs),
+    #               total=len(jobs), desc="Visualizing tasks"))
+    for job in tqdm(jobs, desc="Visualizing tasks"):
+        visualize_cell_lines_job(job)
 
 
-def visualize_tasks_job(job:Tuple):
+def visualize_tasks_job(job: Tuple):
     target, cell_line, task, balance_mode = job
     path = "visualize/decompositions/{cell_line}/{cell_line}-{balance_mode}-{task}.png".format(
         task=task["name"],
         cell_line=cell_line,
         balance_mode=balance_mode.replace("umbalanced", "unbalanced")
     ).replace(" ", "_")
-    #if not (can_run(cell_line) and can_run(path)):
+    # if not (can_run(cell_line) and can_run(path)):
     #    return
 
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -244,14 +281,15 @@ def visualize_tasks_job(job:Tuple):
         c in used_classes for c in classes
     ])
 
-    epigenomic = pd.read_csv(f"{cell_line}-tsne.csv", index_col=[0]).values[mask]
+    epigenomic = pd.read_csv(
+        f"{cell_line}-tsne.csv", index_col=[0]).values[mask]
     sequence = pd.read_csv(f"{cell_line}-mca.csv", index_col=[0]).values[mask]
     classes = classes[mask]
 
     balancer = get_callback(balance_mode)
     epigenomic_train, epigenomic_test, sequence_train, sequence_test, classes_train, classes_test = train_test_split(
         epigenomic, sequence, classes, test_size=0.3, random_state=42)
-    
+
     (epigenomic_train, sequence_train, classes_train), (epigenomic_test, sequence_test, classes_test) = balancer(
         (epigenomic_train, sequence_train, classes_train),
         (epigenomic_test, sequence_test, classes_test)
@@ -264,12 +302,12 @@ def visualize_tasks_job(job:Tuple):
     epigenomic = np.vstack([epigenomic_train, epigenomic_test])
     sequence = np.vstack([sequence_train, sequence_test])
     mask = np.zeros(classes.size)
-    mask[:classes_train.size] = 1
+    mask[: classes_train.size] = 1
     mask = mask.astype(bool)
     _, axes = plt.subplots(1, 4, figsize=(4*4, 4))
     masks = [mask, ~mask]
-    
-    clusterize(sequence, classes, masks, axes[:2], [
+
+    clusterize(sequence, classes, masks, axes[: 2], [
         "MCA - Sequence data - Train set",
         "MCA - Sequence data - Test set"
     ])
@@ -280,11 +318,12 @@ def visualize_tasks_job(job:Tuple):
     save_pic(path)
     clear_cache(path)
 
+
 def visualize_tasks(target: str):
     tasks = list(tasks_generator(target))
     with Pool(cpu_count()) as p:
-        list(tqdm(p.imap(visualize_tasks_job, tasks), total=len(tasks), desc="Visualizing tasks"))
-        
+        list(tqdm(p.imap(visualize_tasks_job, tasks),
+                  total=len(tasks), desc="Visualizing tasks"))
 
 
 def build_tsne(target: str):
@@ -326,10 +365,11 @@ def build_mca(target: str):
             ).to_csv(path)
         clear_cache(path)
 
+
 def visualize(target: str):
     matplotlib.rcParams['figure.dpi'] = 400
-    #with Notipy():
-    build_mca(target)
-    build_tsne(target)
+    with Notipy():
+        build_mca(target)
+        build_tsne(target)
     #visualize_tasks(target)
     #visualize_cell_lines(target)

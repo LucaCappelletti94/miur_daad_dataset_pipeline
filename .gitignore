@@ -5,3 +5,7 @@
 htmlcov
 test_dataset
 \.coverage*
+dataset/hg19*
+dataset/*/*.bed
+dataset/*/*.csv
+dataset/*/*.fa
