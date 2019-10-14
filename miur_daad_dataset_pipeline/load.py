@@ -55,6 +55,7 @@ def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance
         classes,
         holdouts=random_holdouts(**holdouts, hyper_parameters={
             "task": task["name"],
+            "data": "epigenomic" if task["epigenomic_data"] else "sequence",
             "negative": task["positive"],
             "positive": task["negative"],
             "target": target,
