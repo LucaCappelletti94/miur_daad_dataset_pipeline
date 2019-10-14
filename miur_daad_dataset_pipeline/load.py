@@ -9,7 +9,8 @@ from auto_tqdm import tqdm
 import numpy as np
 import os
 
-def balanced_generator(generator:Generator, balance: Callable, positive:List[str]) -> Callable:
+
+def balanced_generator(generator: Generator, balance: Callable, positive: List[str]) -> Callable:
     if generator is None:
         return None
 
@@ -27,7 +28,7 @@ def balanced_generator(generator:Generator, balance: Callable, positive:List[str
     return wrapper
 
 
-def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance_mode: str, holdouts:Dict, verbose:bool=True, cache_dir:str=".holdouts"):
+def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance_mode: str, holdouts: Dict, verbose: bool = True, cache_dir: str = ".holdouts"):
     classes = load_raw_classes(target, cell_line).values
     used_classes = task["positive"] + task["negative"]
     mask = np.array([
@@ -42,36 +43,46 @@ def balanced_holdouts_generator(target: str, cell_line: str, task: Dict, balance
         data.append(epigenomic_data)
 
     if task["nucleotides_sequences"]:
-        nucleotides_sequences = load_raw_nucleotides_sequences(target, cell_line)
+        nucleotides_sequences = load_raw_nucleotides_sequences(
+            target, cell_line)
         nucleotides_sequences = nucleotides_sequences[mask]
         data.append(nucleotides_sequences)
-    
+
     classes = classes[mask]
 
     generator = cached_holdouts_generator(
         *data,
         classes,
-        holdouts=random_holdouts(**holdouts, hyper_parameters=task),
+        holdouts=random_holdouts(**holdouts, hyper_parameters={
+            "task": task["name"],
+            "negative": task["positive"],
+            "positive": task["negative"],
+            "target": target,
+            "cell_line": cell_line
+        }),
         skip=skip,
         cache_dir=cache_dir,
         verbose=verbose
     )
     return balanced_generator(generator, get_callback(balance_mode), task["positive"])
 
-def task_builder(target:str, holdouts:Dict, cache_dir:str=".holdouts"):
+
+def task_builder(target: str, holdouts: Dict, cache_dir: str = ".holdouts"):
     with Notipy() as report:
         tasks = list(tasks_generator(target))
         for i, task in tqdm(enumerate(tasks), total=len(tasks), desc="Build tasks"):
-            generator = balanced_holdouts_generator(*task, holdouts, cache_dir=cache_dir)
+            generator = balanced_holdouts_generator(
+                *task, holdouts, cache_dir=cache_dir)
             for _, _, sub_generator in generator():
                 if sub_generator is not None:
                     for _ in sub_generator():
                         pass
             report.add_report(pd.DataFrame({
-                "task":task[2]["name"],
-                "cell_line":task[1],
-                "balancing":task[3]
+                "task": task[2]["name"],
+                "cell_line": task[1],
+                "balancing": task[3]
             }, index=[i]))
+
 
 def tasks_generator(target: str) -> Generator:
     tasks = load_tasks(target)

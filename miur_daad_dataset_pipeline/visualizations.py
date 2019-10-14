@@ -57,27 +57,28 @@ def plot_clusters(*X: Tuple[np.ndarray], classes: pd.DataFrame, axis, title: str
         "A-E, A-P": 0
     }
     X = np.array(X).T
-    unique_classes = list(set(classes.values.flatten()))
-    total_elements = X.shape[0]
-    for i, label in enumerate(unique_classes):
-        label_mask = classes.values.flatten() == label
-        class_elements = np.sum(label_mask)
-        axis.scatter(
-            *X[label_mask].T,
-            edgecolors='none',
-            color=colors[colors_map[label]],
-            s=5,
-            label=label,
-            # To put on top the smaller cluster
-            zorder=total_elements - class_elements,
-            alpha=0.6
-        )
+    chosen_colors = [
+        colors[colors_map[c]] for c in classes.values.flatten()
+    ] 
+    axis.scatter(
+        *X.T,
+        # edgecolors='none',
+        color=chosen_colors,
+        s=0.1,
+        # label=label,
+        # To put on top the smaller cluster
+        #zorder=total_elements - class_elements,
+        # alpha=0.5
+    )
     #     axis.get_legend().legendHandles[i].set_alpha(1)
     #     axis.get_legend().legendHandles[i]._sizes = [50]
-    axis.get_legend().set_title("Classes")
+    # axis.get_legend().set_title("Classes")
     # axis.get_legend().set_zorder(total_elements)
-    axis.set_xlim(-0.05, 1.05)
-    axis.set_ylim(-0.05, 1.05)
+    # axis.set_xlim(-0.05, 1.05)
+    # axis.set_ylim(-0.05, 1.05)
+    axis.set_xticklabels([])
+    axis.set_yticklabels([])
+    axis.set_zticklabels([])
     axis.set_title(title)
 
 
@@ -97,22 +98,20 @@ def clusterize(X: pd.DataFrame, y: pd.DataFrame, masks: List[np.array], axes: Li
             title=title
         )
 
-def clusterize_3d(*X:Tuple[np.ndarray], classes: pd.DataFrame, masks: List[np.array], subplots_args:Dict, titles: List[str]):
-    fig, axes = subplots(**subplots_args)
+
+def clusterize_3d(*X: Tuple[np.ndarray], classes: pd.DataFrame, masks: List[np.array], subplots_args=None, axes=None, titles: List[str]):
+    #fig, axes = subplots(**subplots_args, subplot_kw={"zscale":"linear"})
+    axes = axes.flatten()
     X = np.array(X).T
-    for _ in range(2):
-        std_mask = (np.abs(stats.zscore(X)) < 3).all(axis=1)
-        X, classes, masks = X[std_mask], classes[std_mask], [
-            mask[std_mask] for mask in masks
-        ]
-    for mask, ax, title in zip(masks, axes.flatten(), titles):
+    for mask, ax, title in zip(masks, axes, titles):
         plot_clusters(
             *X[mask].T,
             classes=classes[mask],
             axis=ax,
             title=title
         )
-    return fig, axes
+    #return fig, axes
+
 
 def tsne(X: pd.DataFrame, dimensions: int):
     return pd.DataFrame(TSNE(n_jobs=cpu_count(), verbose=0, random_state=42, n_components=dimensions).fit_transform(
@@ -175,7 +174,7 @@ def build_cell_line_visualization(classes: pd.DataFrame, title: str, n: int = 4)
     for axis in flat_axes[len(uniques)+1:]:
         axis.axis("off")
     titles = [
-        f"{title} - {c}" for c in uniques
+        f"{c}" for c in uniques
     ]
     titles.append(title)
     masks = []
@@ -187,6 +186,13 @@ def build_cell_line_visualization(classes: pd.DataFrame, title: str, n: int = 4)
     return masks, flat_axes, titles
 
 
+def build_cell_line_visualization_3d(classes: pd.DataFrame, title: str, n: int = 4):
+    masks, _, titles = build_cell_line_visualization(classes, title, n)
+    uniques = sorted(set(classes.values.flatten()))
+    h = np.ceil((len(uniques)+1)/n).astype(int)
+    return masks, {"ncols": n, "nrows": h, "figsize": (2.5*n, 2.5*h)}, titles
+
+
 def build_cell_line_big_visualization(classes: pd.DataFrame, title: str):
     _, axes = plt.subplots(1, 1, figsize=(7, 7))
     return [np.ones(classes.size).astype(bool)], [axes], [title]
@@ -194,7 +200,7 @@ def build_cell_line_big_visualization(classes: pd.DataFrame, title: str):
 
 def build_cell_line_big_visualization_3d(classes: pd.DataFrame, title: str):
     masks, _, titles = build_cell_line_big_visualization(classes, title)
-    return masks, {"ncols":1, "nrows":1, "figsize":(7, 7)}, titles
+    return masks, {"ncols": 1, "nrows": 1, "figsize": (7, 7)}, titles
 
 
 def visualize_cell_lines_nucleotides(target: str, cell_line: str, path: str, classes: pd.DataFrame, args):
@@ -202,6 +208,25 @@ def visualize_cell_lines_nucleotides(target: str, cell_line: str, path: str, cla
     sequence = pd.read_csv(f"{cell_line}-mca.csv", index_col=[0]).values
     clusterize(sequence, classes, *args)
     save_pic(path)
+    clear_cache(path)
+
+
+def visualize_cell_lines_nucleotides_3d(target: str, cell_line: str, path: str, classes: pd.DataFrame, masks: List, subplots_args: Dict, titles: List):
+    build_cache(path)
+    sequence = pd.read_csv(f"{cell_line}-mca3.csv", index_col=[0]).values
+    unknown_mask = (classes.values != "UK").flatten()
+    masks = [
+        mask[unknown_mask] for mask in masks
+    ]
+    sequence = sequence[unknown_mask]
+    classes = classes[unknown_mask]
+    for _ in range(2):
+        std_mask = (np.abs(stats.zscore(sequence)) < 3).all(axis=1)
+        sequence, classes, masks = sequence[std_mask], classes[std_mask], [
+            mask[std_mask] for mask in masks
+        ]
+    rotate(clusterize_3d, *sequence.T, duration=3, path=path, parallelize=True, verbose=True,
+           classes=classes, masks=masks, subplots_args=subplots_args, titles=titles)
     clear_cache(path)
 
 
@@ -213,10 +238,11 @@ def visualize_cell_lines_epigenomic(target: str, cell_line: str, path: str, clas
     clear_cache(path)
 
 
-def visualize_cell_lines_epigenomic_3d(target: str, cell_line: str, path: str, classes: pd.DataFrame, masks:List, subplots_args:Dict, titles:List):
+def visualize_cell_lines_epigenomic_3d(target: str, cell_line: str, path: str, classes: pd.DataFrame, masks: List, subplots_args: Dict, titles: List):
     build_cache(path)
     epigenomic = pd.read_csv(f"{cell_line}-tsne3.csv", index_col=[0]).values
-    rotate(clusterize_3d, *epigenomic.T, duration=3, path=path, classes=classes, masks=masks, subplots_args=subplots_args, titles=titles)
+    rotate(clusterize_3d, *epigenomic.T, duration=3, path=path, parallelize=True,
+           verbose=True, classes=classes, masks=masks, subplots_args=subplots_args, titles=titles)
     clear_cache(path)
 
 
@@ -229,26 +255,34 @@ def visualize_cell_lines_job(job: Tuple):
         f"{path}/tsne.png",
         f"{path}/big-mca.png",
         f"{path}/big-tsne.png",
-        f"{path}/big-tsne3.png",
+        f"{path}/big-tsne3.gif",
+        f"{path}/tsne3.gif",
+        f"{path}/mca3.gif",
     ]
     if all([not can_run(p) for p in paths]):
         return
     classes = load_raw_classes(target, cell_line)
-    if can_run(paths[0]):
-        visualize_cell_lines_nucleotides(
-            target, cell_line, paths[0], classes, build_cell_line_visualization(classes, "MCA of sequence data"))
-    if can_run(paths[1]):
-        visualize_cell_lines_epigenomic(target, cell_line, paths[1], classes, build_cell_line_visualization(
-            classes, "TSNE of epigenomic data"))
-    if can_run(paths[2]):
-        visualize_cell_lines_nucleotides(
-            target, cell_line, paths[2], classes, build_cell_line_big_visualization(classes, "MCA of sequence data"))
-    if can_run(paths[3]):
-        visualize_cell_lines_epigenomic(target, cell_line, paths[3], classes, build_cell_line_big_visualization(
-            classes, "TSNE of epigenomic data"))
-    if can_run(paths[4]):
+    # if can_run(paths[0]):
+    #     visualize_cell_lines_nucleotides(
+    #         target, cell_line, paths[0], classes, build_cell_line_visualization(classes, "MCA of sequence data"))
+    # if can_run(paths[1]):
+    #     visualize_cell_lines_epigenomic(target, cell_line, paths[1], classes, build_cell_line_visualization(
+    #         classes, "TSNE of epigenomic data"))
+    # if can_run(paths[2]):
+    #     visualize_cell_lines_nucleotides(
+    #         target, cell_line, paths[2], classes, build_cell_line_big_visualization(classes, "MCA of sequence data"))
+    # if can_run(paths[3]):
+    #     visualize_cell_lines_epigenomic(target, cell_line, paths[3], classes, build_cell_line_big_visualization(
+    #         classes, "TSNE of epigenomic data"))
+    # if can_run(paths[4]):
+    #     visualize_cell_lines_epigenomic_3d(
+    #         target, cell_line, paths[4], classes, *build_cell_line_big_visualization_3d(classes, "TSNE of epigenomic data"))
+    if can_run(paths[5]):
         visualize_cell_lines_epigenomic_3d(
-            target, cell_line, paths[4], classes, *build_cell_line_big_visualization_3d(classes, "TSNE of epigenomic data"))
+            target, cell_line, paths[5], classes, *build_cell_line_visualization_3d(classes, "TSNE of epigenomic data"))
+    if can_run(paths[6]):
+        visualize_cell_lines_nucleotides_3d(
+            target, cell_line, paths[6], classes, *build_cell_line_visualization_3d(classes, "MCA of epigenomic data"))
 
 
 def visualize_cell_lines(target: str):
@@ -258,7 +292,7 @@ def visualize_cell_lines(target: str):
     # with Pool(cpu_count()) as p:
     #     list(tqdm(p.imap(visualize_cell_lines_job, jobs),
     #               total=len(jobs), desc="Visualizing tasks"))
-    for job in tqdm(jobs, desc="Visualizing tasks"):
+    for job in tqdm(jobs[:1], desc="Visualizing tasks"):
         visualize_cell_lines_job(job)
 
 
@@ -282,8 +316,8 @@ def visualize_tasks_job(job: Tuple):
     ])
 
     epigenomic = pd.read_csv(
-        f"{cell_line}-tsne.csv", index_col=[0]).values[mask]
-    sequence = pd.read_csv(f"{cell_line}-mca.csv", index_col=[0]).values[mask]
+        f"{cell_line}-tsne3.csv", index_col=[0]).values[mask]
+    sequence = pd.read_csv(f"{cell_line}-mca3.csv", index_col=[0]).values[mask]
     classes = classes[mask]
 
     balancer = get_callback(balance_mode)
@@ -304,14 +338,15 @@ def visualize_tasks_job(job: Tuple):
     mask = np.zeros(classes.size)
     mask[: classes_train.size] = 1
     mask = mask.astype(bool)
-    _, axes = plt.subplots(1, 4, figsize=(4*4, 4))
+    _, axes = subplots(1, 4, figsize=(4*4, 4))
+    axes = axes.flatten()
     masks = [mask, ~mask]
 
-    clusterize(sequence, classes, masks, axes[: 2], [
+    clusterize_3d(*sequence.T, classes=classes, masks=masks, axes=axes[: 2], titles=[
         "MCA - Sequence data - Train set",
         "MCA - Sequence data - Test set"
     ])
-    clusterize(epigenomic, classes, masks, axes[2:], [
+    clusterize_3d(*epigenomic.T, classes=classes, masks=masks, axes=axes[2:], titles=[
         "TSNE - Epigenomic data - Train set",
         "TSNE - Epigenomic data - Test set"
     ])
@@ -321,9 +356,11 @@ def visualize_tasks_job(job: Tuple):
 
 def visualize_tasks(target: str):
     tasks = list(tasks_generator(target))
-    with Pool(cpu_count()) as p:
-        list(tqdm(p.imap(visualize_tasks_job, tasks),
-                  total=len(tasks), desc="Visualizing tasks"))
+    # with Pool(cpu_count()) as p:
+    #     list(tqdm(p.imap(visualize_tasks_job, tasks),
+    #               total=len(tasks), desc="Visualizing tasks"))
+    for task in tqdm(tasks):
+        visualize_tasks_job(task)
 
 
 def build_tsne(target: str):
@@ -367,9 +404,9 @@ def build_mca(target: str):
 
 
 def visualize(target: str):
-    matplotlib.rcParams['figure.dpi'] = 400
-    with Notipy():
-        build_mca(target)
-        build_tsne(target)
-    #visualize_tasks(target)
+    matplotlib.rcParams['figure.dpi'] = 70
+    # with Notipy():
+    #     build_mca(target)
+    #     build_tsne(target)
+    visualize_tasks(target)
     #visualize_cell_lines(target)
