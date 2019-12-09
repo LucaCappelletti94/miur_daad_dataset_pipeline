@@ -99,6 +99,7 @@ setup(
         "seaborn",
         "cmake",
         "mca",
+        "ddd_subplots",
         "MulticoreTSNE"
     ],
     extras_require=extras,
